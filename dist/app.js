@@ -263,25 +263,43 @@ window.addEventListener('focus', refreshProduct);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshProduct(); });
 setInterval(() => { if (!document.hidden) refreshProduct(); }, 180000);
 
-// One-time, lightweight entrances for sections below the viewport.
-if ('IntersectionObserver' in window && !motionPreference.matches) {
-  const sections = [...document.querySelectorAll('.qualities > div, .section-intro, .mode-details, .purchase-copy, .purchase-card')];
-  const observer = new IntersectionObserver(entries => {
+// Entrances replay on a fresh page load, once per element while scrolling.
+if (!motionPreference.matches) {
+  const opening = [...document.querySelectorAll('.site-header, .hero-copy > *, .hero-visual')];
+  opening.forEach((element, index) => {
+    const bounds = element.getBoundingClientRect();
+    if (bounds.bottom <= 0 || bounds.top >= window.innerHeight * 0.92) return;
+    element.style.setProperty('--entrance-delay', `${Math.min(index * 45, 300)}ms`);
+    element.classList.add('page-entrance');
+    element.addEventListener('animationend', event => {
+      if (event.target === element) element.classList.remove('page-entrance');
+    });
+  });
+  const sections = [...document.querySelectorAll('.hero-visual, .qualities > div, .section-intro, .mode-details, .display-care, .purchase-copy, .purchase-card, .site-footer > *')];
+  const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('is-revealed');
       observer.unobserve(entry.target);
     });
-  }, { threshold: 0.12, rootMargin: '0px 0px -24px 0px' });
-  sections.forEach((section, index) => {
-    if (section.getBoundingClientRect().top < window.innerHeight * 0.85) return;
+  }, { threshold: 0.12, rootMargin: '0px 0px -24px 0px' }) : null;
+  if (observer) sections.forEach((section, index) => {
+    if (section.getBoundingClientRect().top < window.innerHeight * 0.92) return;
     section.style.setProperty('--reveal-delay', `${Math.min(index % 3 * 55, 110)}ms`);
     section.classList.add('scroll-reveal');
     observer.observe(section);
   });
+  document.addEventListener('focusin', event => {
+    const section = event.target.closest('.scroll-reveal, .page-entrance');
+    if (!section) return;
+    section.classList.remove('page-entrance');
+    section.classList.add('is-revealed');
+    observer?.unobserve(section);
+  });
   motionPreference.addEventListener('change', event => {
     if (!event.matches) return;
-    observer.disconnect();
+    observer?.disconnect();
+    opening.forEach(element => element.classList.remove('page-entrance'));
     sections.forEach(section => section.classList.add('is-revealed'));
   });
 }

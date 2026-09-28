@@ -139,3 +139,10 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 .display-care-sources a{text-decoration:underline;text-decoration-color:#ffffff30;text-underline-offset:3px}
 .display-care-sources a:hover{color:var(--accent-bright)}
 @media(max-width:640px){.display-care{gap:12px;padding-block:26px}.display-care h3{font-size:.9375rem}.display-care p{font-size:.875rem}}
+
+/* Staggered opening, using opacity and a short movement only. */
+.page-entrance{animation:lum4-entrance .6s cubic-bezier(.2,.65,.3,1) var(--entrance-delay,0ms) both}
+.hero-copy>.page-entrance{--entrance-x:-10px;--entrance-y:8px}
+.hero-visual.page-entrance{--entrance-x:12px;--entrance-y:0px}
+@keyframes lum4-entrance{from{opacity:0;transform:translate(var(--entrance-x,0px),var(--entrance-y,7px))}to{opacity:1;transform:translate(0,0)}}
+@media(prefers-reduced-motion:reduce){.page-entrance{animation:none!important;opacity:1;transform:none}}

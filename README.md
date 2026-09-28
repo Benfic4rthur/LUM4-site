@@ -53,7 +53,7 @@ A capa de compartilhamento é renderizada de `scripts/share-card.html` em 1200 �
 - Marca original do app; fotografia criada para a página e comprimida em WebP.
 - Fontes do sistema, sem bibliotecas de interface, rastreadores ou serviços externos no carregamento.
 - Responsivo, controles por teclado, modais nativos e respeito à preferência de movimento reduzido.
-- Entradas suaves ao rolar, uma vez por elemento, usando IntersectionObserver sem dependências. As animações são desativadas com movimento reduzido.
+- Abertura em etapas suaves no cabeçalho, texto e prévia, repetida a cada carregamento. Os elementos abaixo aparecem uma vez conforme a rolagem, usando IntersectionObserver sem dependências. Os efeitos usam opacidade e pequenos deslocamentos, respeitam movimento reduzido e mantêm o acesso por teclado.
 - Uma passagem de luz âmbar percorre a frase “o que importa.” uma vez ao abrir a página, com um halo discreto que desaparece completamente. Dura cerca de três segundos, não roda em loop e respeita movimento reduzido.
 
 Os arquivos publicados não contêm credenciais nem código do repositório privado do aplicativo.
