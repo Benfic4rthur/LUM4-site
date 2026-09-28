@@ -20,12 +20,17 @@ O site publicado usa `product.json` e navega diretamente para os links públicos
 
 Edite `site.config.json`:
 
-- `price`: preço numérico (14.99).
+- `price`: preço de compatibilidade da licença individual (14.99); `plans` tem prioridade.
 - `currency`: moeda ISO (BRL).
 - `downloadUrl`: endereço HTTPS do instalador público.
-- `checkoutUrl`: endereço HTTPS de um checkout real.
+- `plans`: opções com `devices`, `price` e `checkoutUrl`. Os valores atuais são 1 Mac por R$ 14,99, 2 Macs por R$ 23,99 e 3 Macs por R$ 29,99. Cada pacote precisa de seu próprio endereço HTTPS de checkout.
+- `checkoutUrl`: endereço de compatibilidade para a licença de 1 Mac, usado quando essa opção não tem link próprio.
 
-Na prévia local, também é possível fornecer `LUM4_DOWNLOAD_URL` e `LUM4_CHECKOUT_URL` como variáveis de ambiente; as rotas fazem o redirecionamento. Na versão de GitHub Pages, o gerador lê `site.config.json`, e os links configurados ficam públicos em `product.json`. Não coloque chaves de pagamento nesta configuração. O site não processa pagamentos nem cria licenças.
+Na prévia local, também é possível fornecer `LUM4_DOWNLOAD_URL` e `LUM4_CHECKOUT_URL` como variáveis de ambiente; esta última é o link de compatibilidade da opção de 1 Mac. A rota de compra usa `?devices=1`, `2` ou `3` para redirecionar ao checkout do pacote selecionado. Na versão de GitHub Pages, o gerador lê `site.config.json`, e os links configurados ficam públicos em `product.json`. Não coloque chaves de pagamento nesta configuração. O site não processa pagamentos nem cria licenças.
+
+O cartão permite selecionar o número de Macs. A economia do pacote de 3 Macs é calculada em centavos, comparando seu preço com três licenças individuais: R$ 44,97 − R$ 29,99 = R$ 14,98, aproximadamente 33%. O destaque e os valores acompanham a configuração e o idioma escolhido.
+
+Ao passar o mouse sobre um pacote, ele sobe 4 pixels e recebe uma borda e um brilho âmbar suaves. O efeito usa apenas CSS e respeita movimento reduzido; a seleção da licença permanece independente do destaque do mouse.
 
 Sem links configurados, os botões informam que o endereço de download ou de pagamento ainda não está disponível nesta página. Os links reais precisam ser fornecidos. O preço permanece em reais nos três idiomas; alterar `currency` permite ajustar a moeda, sem conversão automática.
 

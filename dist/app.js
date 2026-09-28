@@ -5,7 +5,8 @@ const image = document.querySelector('#preview-image');
 const stateLabel = document.querySelector('#boost-state');
 const dialog = document.querySelector('#availability-dialog');
 const staticHosting = document.documentElement.dataset.hosting === 'static';
-let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL' };
+let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ devices: 1, price: 14.99, checkoutAvailable: false }, { devices: 2, price: 23.99, checkoutAvailable: false }, { devices: 3, price: 29.99, checkoutAvailable: false }] };
+let selectedDevices = 1;
 let productLoaded = false;
 let productUnavailable = false;
 let availabilityType = 'download';
@@ -148,13 +149,14 @@ tabs.forEach(tab => {
   });
 });
 
-function formattedPrice() {
-  return new Intl.NumberFormat(copy().locale, { style: 'currency', currency: product.currency, currencyDisplay: language === 'pt' ? 'symbol' : 'code' }).format(product.price);
+function selectedPlan() { return product.plans.find(plan => plan.devices === selectedDevices); }
+function formattedPrice(price = selectedPlan().price) {
+  return new Intl.NumberFormat(copy().locale, { style: 'currency', currency: product.currency, currencyDisplay: language === 'pt' ? 'symbol' : 'code' }).format(price);
 }
 function updateDialog() {
   const prefix = availabilityType === 'checkout' ? 'checkout' : 'download';
   document.querySelector('#dialog-title').textContent = message(`${prefix}DialogTitle`);
-  document.querySelector('#dialog-description').textContent = message(`${prefix}DialogDescription`, { price: formattedPrice() });
+  document.querySelector('#dialog-description').textContent = message(`${prefix}DialogDescription`, { price: formattedPrice(), devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
 }
 function showAvailability(type) {
   availabilityType = type;
@@ -165,7 +167,13 @@ document.querySelectorAll('[data-download]').forEach(link => link.addEventListen
   if (!product.downloadAvailable) { event.preventDefault(); showAvailability('download'); }
 }));
 document.querySelectorAll('[data-checkout]').forEach(link => link.addEventListener('click', event => {
-  if (!product.checkoutAvailable) { event.preventDefault(); showAvailability('checkout'); }
+  if (!selectedPlan().checkoutAvailable) { event.preventDefault(); showAvailability('checkout'); }
+}));
+document.querySelectorAll('input[name="license-plan"]').forEach(input => input.addEventListener('change', () => {
+  const devices = Number(input.value);
+  if (!input.checked || !product.plans.some(plan => plan.devices === devices)) return;
+  selectedDevices = devices;
+  renderProduct();
 }));
 document.querySelector('#dialog-close').addEventListener('click', () => dialog.close());
 document.querySelector('#dialog-done').addEventListener('click', () => dialog.close());
@@ -175,23 +183,42 @@ dialog.addEventListener('click', event => {
 });
 
 function renderProduct() {
-  document.querySelectorAll('[data-price]').forEach(item => { item.textContent = formattedPrice(); });
+  const plan = selectedPlan();
+  document.querySelectorAll('[data-plan-price]').forEach(item => {
+    item.textContent = formattedPrice(product.plans.find(option => option.devices === Number(item.dataset.planPrice)).price);
+  });
+  document.querySelectorAll('[data-checkout]').forEach(link => {
+    link.href = staticHosting && plan.checkoutAvailable ? plan.checkoutUrl : `/api/checkout?devices=${selectedDevices}`;
+  });
+  const separatePrice = Math.round(product.plans[0].price * 100) * 3;
+  const savings = Math.max(0, separatePrice - Math.round(product.plans[2].price * 100));
+  const badge = document.querySelector('[data-plan-savings-badge]');
+  badge.hidden = savings === 0;
+  badge.textContent = `−${new Intl.NumberFormat(copy().locale, { style: 'percent', maximumFractionDigits: 0 }).format(separatePrice ? savings / separatePrice : 0)}`;
+  document.querySelector('[data-plan-savings-copy]').textContent = savings > 0 ? message('tripleSavings', { savings: formattedPrice(savings / 100) }) : copy().strings['purchase.caption'];
+  document.querySelector('[data-plan-savings-basis]').hidden = savings === 0;
   document.querySelector('[data-download-count]').textContent = productUnavailable || product.downloads === null ? '—' : new Intl.NumberFormat(copy().locale).format(product.downloads);
   document.querySelector('[data-download-unit]').textContent = message(productLoaded && product.downloads === 1 ? 'downloadOne' : 'downloadOther');
   document.querySelector('[data-release-status]').textContent = message(productUnavailable ? 'downloadUnavailable' : product.downloadAvailable ? 'downloadReady' : 'downloadSoon');
-  document.querySelector('[data-sale-status]').textContent = message(product.checkoutAvailable ? 'saleReady' : 'saleSoon');
-  document.querySelector('[data-checkout-note]').textContent = message(product.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon');
+  document.querySelector('[data-sale-status]').textContent = message(plan.checkoutAvailable ? 'saleReady' : 'saleSoon');
+  document.querySelector('[data-checkout-note]').textContent = message(plan.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon', { devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
   if (dialog.open) updateDialog();
 }
 async function refreshProduct() {
   try {
-    const response = await fetch(staticHosting ? '/product.json' : '/api/product', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
+    const response = await fetch(staticHosting ? '/product.json?v=plans1' : '/api/product', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
     if (!response.ok) throw new Error('Product unavailable');
     const data = await response.json();
     const validCount = Number.isSafeInteger(data.downloads) && data.downloads >= 0 || staticHosting && data.downloads === null;
     if (typeof data.downloadAvailable !== 'boolean' || typeof data.checkoutAvailable !== 'boolean' || !validCount || !Number.isFinite(data.price) || data.price < 0 || typeof data.currency !== 'string' || !/^[A-Z]{3}$/.test(data.currency)) throw new Error('Invalid product');
+    if (!Array.isArray(data.plans) || data.plans.length !== 3 || !data.plans.every((plan, index) => plan?.devices === index + 1 && Number.isFinite(plan.price) && plan.price >= 0 && typeof plan.checkoutAvailable === 'boolean')) throw new Error('Invalid license plans');
     if (staticHosting) {
-      for (const [key, flag, selector] of [['downloadUrl', 'downloadAvailable', '[data-download]'], ['checkoutUrl', 'checkoutAvailable', '[data-checkout]']]) {
+      for (const plan of data.plans) {
+        if (!plan.checkoutAvailable) continue;
+        const target = new URL(plan.checkoutUrl);
+        if (target.protocol !== 'https:' || target.username || target.password) throw new Error('Invalid plan link');
+      }
+      for (const [key, flag, selector] of [['downloadUrl', 'downloadAvailable', '[data-download]']]) {
         if (!data[flag]) continue;
         const target = new URL(data[key]);
         if (target.protocol !== 'https:' || target.username || target.password) throw new Error('Invalid public link');

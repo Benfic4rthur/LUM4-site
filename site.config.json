@@ -2,5 +2,10 @@
   "price": 14.99,
   "currency": "BRL",
   "downloadUrl": null,
-  "checkoutUrl": null
+  "checkoutUrl": null,
+  "plans": [
+    { "devices": 1, "price": 14.99, "checkoutUrl": null },
+    { "devices": 2, "price": 23.99, "checkoutUrl": null },
+    { "devices": 3, "price": 29.99, "checkoutUrl": null }
+  ]
 }

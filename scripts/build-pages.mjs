@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getLicensePlans } from '../license-plans.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = resolve(root, 'dist');
@@ -21,15 +22,16 @@ function publicHttpsUrl(value) {
 if (!/<html(?:\s|>)/i.test(sourceHtml)) throw new Error('A página precisa de um elemento html.');
 const html = sourceHtml.replace(/<html(\s|>)/i, '<html data-hosting="static"$1');
 const downloadUrl = publicHttpsUrl(config.downloadUrl);
-const checkoutUrl = publicHttpsUrl(config.checkoutUrl);
+const plans = getLicensePlans(config);
 const product = {
-  price: Number.isFinite(config.price) && config.price >= 0 ? config.price : 14.99,
+  price: plans[0].price,
   currency: /^[A-Z]{3}$/.test(config.currency) ? config.currency : 'BRL',
   downloads: null,
   downloadAvailable: Boolean(downloadUrl),
-  checkoutAvailable: Boolean(checkoutUrl),
+  checkoutAvailable: plans[0].checkoutAvailable,
   downloadUrl,
-  checkoutUrl
+  checkoutUrl: plans[0].checkoutUrl,
+  plans
 };
 
 await rm(output, { recursive: true, force: true });

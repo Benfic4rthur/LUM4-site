@@ -2,6 +2,7 @@ import { createServer } from 'node:http';
 import { readFile, writeFile, rename, stat } from 'node:fs/promises';
 import { resolve, extname, sep, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getLicensePlans } from './license-plans.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const publicRoot = resolve(root, 'dist');
@@ -18,11 +19,13 @@ function validUrl(value) {
 }
 async function getConfig() {
   const config = JSON.parse(await readFile(configPath, 'utf8'));
+  const plans = getLicensePlans(config, process.env.LUM4_CHECKOUT_URL || config.checkoutUrl);
   return {
-    price: Number.isFinite(config.price) && config.price >= 0 ? config.price : 14.99,
+    price: plans[0].price,
     currency: /^[A-Z]{3}$/.test(config.currency) ? config.currency : 'BRL',
     downloadUrl: validUrl(process.env.LUM4_DOWNLOAD_URL || config.downloadUrl),
-    checkoutUrl: validUrl(process.env.LUM4_CHECKOUT_URL || config.checkoutUrl)
+    checkoutUrl: plans[0].checkoutUrl,
+    plans
   };
 }
 async function getCount() {
@@ -51,17 +54,19 @@ const server = createServer(async (req, res) => {
   res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'");
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.setHeader('Allow', 'GET, HEAD'); return json(res, 405, { error: 'Método indisponível.' }); }
-    const { pathname } = new URL(req.url, 'http://localhost');
+    const { pathname, searchParams } = new URL(req.url, 'http://localhost');
     if (pathname === '/api/product') {
       const config = await getConfig();
       await counterQueue;
-      return json(res, 200, { price: config.price, currency: config.currency, downloads: await getCount(), downloadAvailable: Boolean(config.downloadUrl), checkoutAvailable: Boolean(config.checkoutUrl) });
+      return json(res, 200, { price: config.price, currency: config.currency, downloads: await getCount(), downloadAvailable: Boolean(config.downloadUrl), checkoutAvailable: Boolean(config.checkoutUrl), plans: config.plans.map(({ devices, price, checkoutAvailable }) => ({ devices, price, checkoutAvailable })) });
     }
     if (pathname === '/api/download' || pathname === '/api/checkout') {
       const config = await getConfig();
       const download = pathname === '/api/download';
-      const target = download ? config.downloadUrl : config.checkoutUrl;
-      if (!target) return json(res, 409, { error: download ? 'A primeira versão pública está em preparação.' : 'A compra será liberada no lançamento.' });
+      const plan = config.plans.find(item => item.devices === Number(searchParams.get('devices') || 1));
+      if (!download && !plan) return json(res, 400, { error: 'Licença inválida.' });
+      const target = download ? config.downloadUrl : plan.checkoutUrl;
+      if (!target) return json(res, 409, { error: download ? 'O link de download não está disponível nesta página.' : 'O link de pagamento desta licença não está disponível nesta página.' });
       if (download && req.method === 'GET') await incrementCount();
       res.writeHead(302, { Location: target, 'Cache-Control': 'no-store' });
       return res.end();
