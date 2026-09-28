@@ -142,7 +142,7 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 
 /* Staggered opening, using opacity and a short movement only. */
 .page-entrance{animation:lum4-entrance .6s cubic-bezier(.2,.65,.3,1) var(--entrance-delay,0ms) both}
-.hero-copy>.page-entrance{--entrance-x:-10px;--entrance-y:8px}
-.hero-visual.page-entrance{--entrance-x:12px;--entrance-y:0px}
+.hero-copy>.page-entrance{animation-duration:.8s;--entrance-x:-18px;--entrance-y:12px}
+.hero-visual.page-entrance{animation-duration:.8s;--entrance-x:20px;--entrance-y:0px}
 @keyframes lum4-entrance{from{opacity:0;transform:translate(var(--entrance-x,0px),var(--entrance-y,7px))}to{opacity:1;transform:translate(0,0)}}
 @media(prefers-reduced-motion:reduce){.page-entrance{animation:none!important;opacity:1;transform:none}}
