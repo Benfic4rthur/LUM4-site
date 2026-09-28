@@ -35,6 +35,8 @@ A prévia local mantém o mecanismo anterior em `data/downloads.json`, que regis
 
 ## Conteúdo e desempenho
 
+A capa de compartilhamento é renderizada de `scripts/share-card.html` em 1200 × 630. O símbolo vem da arte original em `scripts/brand-reference.png`, enquadrada em tamanho nativo; não é um redesenho nem uma ampliação do ícone de 64 pixels usado no cabeçalho. Os ícones pequenos usam a marca original de `dist/assets/lum4-mark.png`. Ao trocar a capa, use um novo nome no `og:image` e `twitter:image` para distinguir a versão publicada.
+
 - Manual, Automático, Inteligente e HDR Protection são apresentados como recursos disponíveis, conforme a confirmação do responsável pelo app.
 - Os botões PT, EN e ES trocam todo o conteúdo, incluindo a prévia, os modos, os avisos, os rótulos acessíveis e os metadados. Inglês e espanhol têm textos adaptados para cada idioma.
 - Português é o padrão. A escolha fica salva apenas no navegador; `?lang=en` e `?lang=es` permitem compartilhar um idioma específico. Bloquear armazenamento não impede a troca de idioma.

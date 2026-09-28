@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 // ICO stores the rendered PNG icons without changing their pixels.
 const sizes = [32, 64];
-const images = await Promise.all(sizes.map(size => readFile(new URL(`../dist/assets/lum4-favicon-${size}-v2.png`, import.meta.url))));
+const images = await Promise.all(sizes.map(size => readFile(new URL(`../dist/assets/lum4-favicon-${size}-v3.png`, import.meta.url))));
 const header = Buffer.alloc(6 + sizes.length * 16);
 header.writeUInt16LE(1, 2);
 header.writeUInt16LE(sizes.length, 4);

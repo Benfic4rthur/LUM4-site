@@ -6,8 +6,8 @@
 *{box-sizing:border-box}html,body{margin:0;width:1200px;height:630px;overflow:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#faf8f4;background:#0c0d0f}
 .card{position:relative;width:1200px;height:630px;background:radial-gradient(ellipse at 24% 50%,#ff971a18,transparent 43%),radial-gradient(ellipse at 100% 100%,#ffb25a0e,transparent 57%),#0c0d0f;overflow:hidden}
-.halo{position:absolute;width:280px;height:280px;left:263px;top:168px;border-radius:50%;background:#ffa62914;filter:blur(40px)}
-.symbol{position:absolute;left:252px;top:163px;width:280px;height:280px}
+.symbol{position:absolute;left:266px;top:177px;width:252px;height:252px;overflow:hidden;border-radius:50%;mask-image:radial-gradient(circle 126px at center,#000 91%,transparent 100%)}
+.symbol img{position:absolute;left:-134px;top:-172px;width:1536px;height:1024px;max-width:none}
 .copy{position:absolute;left:583px;top:155px}
 .wordmark{font-size:82px;font-weight:750;letter-spacing:-3px;line-height:1;margin:0}
 .by{display:block;font-size:15px;letter-spacing:5px;margin-top:14px;color:#b6b2ac}
@@ -19,8 +19,8 @@ h1 span{color:#ffd1a0}
 .line{position:absolute;bottom:94px;left:66px;right:66px;height:1px;background:linear-gradient(90deg,transparent,#ffc07833,transparent)}
 </style>
 <div class="card">
-  <div class="halo"></div>
-  <img class="symbol" src="../dist/assets/lum4-symbol.svg" alt="">
+  <!-- Keep the supplied 1536px artwork at native size; do not enlarge the 64px site icon. -->
+  <div class="symbol"><img src="brand-reference.png" alt="Símbolo original do LUM4, extraído da arte de apresentação"></div>
   <div class="copy">
     <p class="wordmark">LUM4</p>
     <span class="by">by ALLM4</span>
