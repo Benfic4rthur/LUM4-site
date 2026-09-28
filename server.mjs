@@ -9,7 +9,7 @@ const configPath = resolve(root, 'site.config.json');
 const counterPath = process.env.LUM4_COUNTER_FILE || resolve(root, 'data/downloads.json');
 const port = Number(process.env.PORT || 4178);
 const host = process.env.HOST || '127.0.0.1';
-const contentTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml' };
+const contentTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/vnd.microsoft.icon' };
 let counterQueue = Promise.resolve();
 
 function validUrl(value) {
