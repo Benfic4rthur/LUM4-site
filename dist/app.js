@@ -4,7 +4,8 @@ const toggle = document.querySelector('#boost-switch');
 const image = document.querySelector('#preview-image');
 const stateLabel = document.querySelector('#boost-state');
 const dialog = document.querySelector('#availability-dialog');
-let product = { downloadAvailable: false, checkoutAvailable: false, downloads: 0, price: 14.99, currency: 'BRL' };
+const staticHosting = document.documentElement.dataset.hosting === 'static';
+let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL' };
 let productLoaded = false;
 let productUnavailable = false;
 let availabilityType = 'download';
@@ -175,7 +176,7 @@ dialog.addEventListener('click', event => {
 
 function renderProduct() {
   document.querySelectorAll('[data-price]').forEach(item => { item.textContent = formattedPrice(); });
-  document.querySelector('[data-download-count]').textContent = productUnavailable ? '—' : new Intl.NumberFormat(copy().locale).format(product.downloads);
+  document.querySelector('[data-download-count]').textContent = productUnavailable || product.downloads === null ? '—' : new Intl.NumberFormat(copy().locale).format(product.downloads);
   document.querySelector('[data-download-unit]').textContent = message(productLoaded && product.downloads === 1 ? 'downloadOne' : 'downloadOther');
   document.querySelector('[data-release-status]').textContent = message(productUnavailable ? 'downloadUnavailable' : product.downloadAvailable ? 'downloadReady' : 'downloadSoon');
   document.querySelector('[data-sale-status]').textContent = message(product.checkoutAvailable ? 'saleReady' : 'saleSoon');
@@ -184,10 +185,19 @@ function renderProduct() {
 }
 async function refreshProduct() {
   try {
-    const response = await fetch('/api/product', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
+    const response = await fetch(staticHosting ? '/product.json' : '/api/product', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
     if (!response.ok) throw new Error('Product unavailable');
     const data = await response.json();
-    if (typeof data.downloadAvailable !== 'boolean' || typeof data.checkoutAvailable !== 'boolean' || !Number.isSafeInteger(data.downloads) || data.downloads < 0 || !Number.isFinite(data.price) || data.price < 0 || typeof data.currency !== 'string' || !/^[A-Z]{3}$/.test(data.currency)) throw new Error('Invalid product');
+    const validCount = Number.isSafeInteger(data.downloads) && data.downloads >= 0 || staticHosting && data.downloads === null;
+    if (typeof data.downloadAvailable !== 'boolean' || typeof data.checkoutAvailable !== 'boolean' || !validCount || !Number.isFinite(data.price) || data.price < 0 || typeof data.currency !== 'string' || !/^[A-Z]{3}$/.test(data.currency)) throw new Error('Invalid product');
+    if (staticHosting) {
+      for (const [key, flag, selector] of [['downloadUrl', 'downloadAvailable', '[data-download]'], ['checkoutUrl', 'checkoutAvailable', '[data-checkout]']]) {
+        if (!data[flag]) continue;
+        const target = new URL(data[key]);
+        if (target.protocol !== 'https:' || target.username || target.password) throw new Error('Invalid public link');
+        document.querySelectorAll(selector).forEach(link => { link.href = target.href; });
+      }
+    }
     product = data;
     productLoaded = true;
     productUnavailable = false;
