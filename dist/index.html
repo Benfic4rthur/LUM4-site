@@ -4,18 +4,20 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0c0d0f" />
-    <meta name="description" content="LUM4 by ALLM4. Boost XDR nativo para macOS, com controle simples e IA local planejada para aprender suas preferências. Para Macs Apple Silicon com tela XDR integrada." />
-    <meta property="og:title" content="LUM4 — Mais luz para o que importa." />
-    <meta property="og:description" content="Descubra uma nova luz no seu Mac. Um app nativo e simples para aproveitar o brilho da sua tela XDR." />
+    <meta name="description" data-i18n-content="meta.description" content="LUM4 by ALLM4. Boost XDR nativo para macOS, com controle simples e IA local que aprende suas preferências. Para Macs Apple Silicon com tela XDR integrada." />
+    <meta property="og:title" data-i18n-content="meta.title" content="LUM4 — Mais luz para o que importa." />
+    <meta property="og:description" data-i18n-content="meta.socialDescription" content="Descubra uma nova luz no seu Mac. Um app nativo e simples para aproveitar o brilho da sua tela XDR." />
+    <meta property="og:locale" data-i18n-content="meta.locale" content="pt_BR" />
     <meta property="og:type" content="website" />
-    <title>LUM4 — Mais luz para o que importa.</title>
+    <title data-i18n="meta.title">LUM4 — Mais luz para o que importa.</title>
     <link rel="icon" type="image/png" href="/assets/lum4-mark.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
     <link rel="stylesheet" href="/styles.css" />
+    <script src="/locales.js" defer></script>
     <script src="/app.js" defer></script>
   </head>
   <body>
-    <a class="skip-link" href="#conteudo">Ir para o conteúdo</a>
+    <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
     <svg class="icon-library" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
       <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-4-4 4 4 4-4M5 15v5h14v-5" /></symbol>
       <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5" /></symbol>
@@ -30,90 +32,96 @@
     </svg>
 
     <header class="site-header wrap">
-      <a class="brand" href="#" aria-label="LUM4, início">
+      <a class="brand" href="#" aria-label="LUM4, início" data-i18n-aria-label="navigation.home">
         <img src="/assets/lum4-mark.png" width="38" height="38" alt="" />
         <span class="brand-name">LUM4<span class="brand-by">by ALLM4</span></span>
       </a>
-      <nav aria-label="Navegação principal">
-        <a class="nav-link" href="#como-funciona">Como funciona</a>
-        <a class="nav-buy" href="#comprar">Comprar <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+      <nav aria-label="Navegação principal" data-i18n-aria-label="navigation.main">
+        <a class="nav-link" href="#como-funciona" data-i18n="navigation.how">Como funciona</a>
+        <a class="nav-buy" href="#comprar"><span data-i18n="actions.buy">Comprar</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
       </nav>
+      <div class="language-switcher" role="group" aria-label="Idioma do site" data-i18n-aria-label="navigation.language">
+        <button type="button" data-language="pt" lang="pt-BR" aria-label="Português" title="Português" aria-pressed="true">PT</button>
+        <button type="button" data-language="en" lang="en" aria-label="English" title="English" aria-pressed="false">EN</button>
+        <button type="button" data-language="es" lang="es" aria-label="Español" title="Español" aria-pressed="false">ES</button>
+      </div>
+      <span id="language-announcement" class="sr-only" aria-live="polite"></span>
     </header>
 
     <main id="conteudo">
       <section class="hero wrap" aria-labelledby="hero-title">
         <div class="hero-copy">
-          <p class="eyebrow platform-eyebrow">FEITO PARA macOS</p>
-          <h1 id="hero-title">Mais luz para<br /><span>o que importa.</span></h1>
-          <p class="hero-description">Aproveite o brilho da sua tela XDR.<br class="desktop-break" /> Com controle simples, transições suaves<br class="desktop-break" /> e uma imagem que continua linda.</p>
-          <div class="ai-highlight"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span>IA local para aprender com você.<small>Modo Inteligente em desenvolvimento</small></span></div>
+          <p class="eyebrow platform-eyebrow" data-i18n="hero.platform">FEITO PARA macOS</p>
+          <h1 id="hero-title" data-i18n-html="hero.title">Mais luz para<br /><span>o que importa.</span></h1>
+          <p class="hero-description" data-i18n-html="hero.description">Aproveite o brilho da sua tela XDR.<br class="desktop-break" /> Com controle simples, transições suaves<br class="desktop-break" /> e uma imagem que continua linda.</p>
+          <div class="ai-highlight"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span><span data-i18n="hero.ai">IA local para aprender com você.</span><small data-i18n="hero.aiStatus">Inteligência no seu Mac. Privacidade com você.</small></span></div>
           <div class="hero-actions">
             <a href="/api/download" class="button button-primary" data-download>
-              <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg> Baixar para macOS
+              <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg> <span data-i18n="actions.download">Baixar para macOS</span>
             </a>
-            <a class="button button-subtle" href="#comprar">Comprar <span data-price>R$ 14,99</span></a>
+            <a class="button button-subtle" href="#comprar"><span data-i18n="actions.buy">Comprar</span> <span data-price>R$ 14,99</span></a>
           </div>
-          <p class="requirements">macOS 26+ · Apple Silicon · Tela XDR integrada</p>
+          <p class="requirements" data-i18n="hero.requirements">macOS 26+ · Apple Silicon · Tela XDR integrada</p>
           <div class="download-summary" aria-live="polite">
             <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
-            <span><strong data-download-count>0</strong> downloads</span>
+            <span><strong data-download-count>0</strong> <span data-download-unit>downloads</span></span>
             <span class="summary-divider" aria-hidden="true"></span>
-            <span class="release-status" data-release-status>Versão pública em breve</span>
+            <span class="release-status" data-release-status>Feito para macOS</span>
           </div>
         </div>
 
-        <div class="hero-visual" role="region" aria-roledescription="carrossel" aria-label="Prévia de brilho em três cenas">
+        <div class="hero-visual" role="region" aria-roledescription="carrossel" aria-label="Prévia de brilho em três cenas" data-i18n-aria-roledescription="preview.carousel" data-i18n-aria-label="preview.region">
           <div class="light-preview" id="light-preview">
             <img class="preview-image" id="preview-image" src="/assets/ocean-sunrise.webp" width="1672" height="941" alt="Sol dourado no horizonte sobre as ondas de um oceano azul." fetchpriority="high" />
             <div class="image-shade" aria-hidden="true"></div>
-            <div class="preview-topline"><span class="preview-wordmark">LUM4</span><span class="preview-tag">Prévia visual</span></div>
-            <div class="scene-copy"><span>Uma tela.<br />Outra sensação.</span></div>
+            <div class="preview-topline"><span class="preview-wordmark">LUM4</span><span class="preview-tag" data-i18n="preview.tag">Prévia visual</span></div>
+            <div class="scene-copy"><span data-i18n-html="preview.slogan">Uma tela.<br />Outra sensação.</span></div>
             <div class="boost-panel">
               <div class="boost-panel-top">
-                <span class="boost-label"><svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg> Boost XDR</span>
-                <button class="switch" id="boost-switch" type="button" role="switch" aria-checked="true" aria-label="Ativar boost na demonstração"><span></span></button>
+                <span class="boost-label"><svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg> <span data-i18n="preview.boost">Boost XDR</span></span>
+                <button class="switch" id="boost-switch" type="button" role="switch" aria-checked="true" aria-label="Ativar boost na demonstração" data-i18n-aria-label="preview.toggle"><span></span></button>
               </div>
               <div class="boost-value"><output id="boost-output" for="boost-range">65<span>%</span></output><span id="boost-state">Luz na medida</span></div>
-              <label class="sr-only" for="boost-range">Intensidade do boost na demonstração</label>
+              <label class="sr-only" for="boost-range" data-i18n="preview.intensity">Intensidade do boost na demonstração</label>
               <input id="boost-range" class="boost-range" type="range" min="0" max="100" value="65" aria-valuetext="65 por cento" />
-              <div class="range-labels"><span>Suave</span><span>Mais luz</span></div>
+              <div class="range-labels"><span data-i18n="preview.soft">Suave</span><span data-i18n="preview.bright">Mais luz</span></div>
             </div>
           </div>
-          <div class="scene-picker" role="group" aria-label="Escolher imagem da prévia">
-            <button class="scene-button" type="button" data-scene="0" aria-pressed="true" aria-label="Mostrar pôr do sol"><img src="/assets/sunrise-thumb.webp" width="44" height="32" alt="" /><span>Pôr do sol</span></button>
-            <button class="scene-button" type="button" data-scene="1" aria-pressed="false" aria-label="Mostrar cena escura"><img src="/assets/night-thumb.webp" width="44" height="32" alt="" /><span>Cena escura</span></button>
-            <button class="scene-button" type="button" data-scene="2" aria-pressed="false" aria-label="Mostrar cena clara"><img src="/assets/snow-thumb.webp" width="44" height="32" alt="" /><span>Cena clara</span></button>
+          <div class="scene-picker" role="group" aria-label="Escolher imagem da prévia" data-i18n-aria-label="preview.scenePicker">
+            <button class="scene-button" type="button" data-scene="0" aria-pressed="true" aria-label="Mostrar amanhecer" data-i18n-aria-label="preview.showSunrise"><img src="/assets/sunrise-thumb.webp" width="44" height="32" alt="" /><span data-i18n="preview.sunrise">Amanhecer</span></button>
+            <button class="scene-button" type="button" data-scene="1" aria-pressed="false" aria-label="Mostrar cena escura" data-i18n-aria-label="preview.showDark"><img src="/assets/night-thumb.webp" width="44" height="32" alt="" /><span data-i18n="preview.dark">Cena escura</span></button>
+            <button class="scene-button" type="button" data-scene="2" aria-pressed="false" aria-label="Mostrar cena clara" data-i18n-aria-label="preview.showLight"><img src="/assets/snow-thumb.webp" width="44" height="32" alt="" /><span data-i18n="preview.light">Cena clara</span></button>
             <span class="scene-position" id="scene-position" aria-hidden="true">1 / 3</span>
           </div>
           <p id="scene-announcement" class="sr-only" aria-live="polite"></p>
-          <div class="preview-caption"><span>Troque a cena e experimente o brilho.</span><span>Simulação visual; o boost real funciona no app.</span></div>
+          <div class="preview-caption"><span data-i18n="preview.try">Troque a cena e experimente o brilho.</span><span data-i18n="preview.simulation">Simulação visual; o boost real funciona no app.</span></div>
         </div>
       </section>
 
-      <section class="qualities wrap" aria-label="Feito para o seu Mac">
-        <div><svg class="icon" aria-hidden="true"><use href="#i-screen" /></svg><span><strong>Nativo do macOS.</strong> Simples por natureza.</span></div>
-        <div><svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg><span><strong>Mais brilho.</strong> Com cuidado pela imagem.</span></div>
-        <div><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><span><strong>Privacidade local.</strong> Sua luz, seu Mac.</span></div>
+      <section class="qualities wrap" aria-label="Feito para o seu Mac" data-i18n-aria-label="qualities.label">
+        <div><svg class="icon" aria-hidden="true"><use href="#i-screen" /></svg><span data-i18n-html="qualities.native"><strong>Nativo do macOS.</strong> Simples por natureza.</span></div>
+        <div><svg class="icon" aria-hidden="true"><use href="#i-sun" /></svg><span data-i18n-html="qualities.brightness"><strong>Mais brilho.</strong> Com cuidado pela imagem.</span></div>
+        <div><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><span data-i18n-html="qualities.privacy"><strong>Privacidade local.</strong> Sua luz, seu Mac.</span></div>
       </section>
 
       <section class="modes-section wrap" id="como-funciona" aria-labelledby="modes-title">
         <div class="section-intro">
-          <p class="eyebrow">Seu brilho, do seu jeito</p><h2 id="modes-title">Você escolhe.<br /><span>O LUM4 acompanha.</span></h2>
-          <p>Na barra de menus do macOS, a um toque de distância. Controle agora. Adaptação ao seu dia e aprendizado com IA local a caminho.</p>
+          <p class="eyebrow" data-i18n="modes.eyebrow">Seu brilho, do seu jeito</p><h2 id="modes-title" data-i18n-html="modes.title">Você escolhe.<br /><span>O LUM4 acompanha.</span></h2>
+          <p data-i18n="modes.description">Na barra de menus do macOS, a um toque de distância. Controle, adaptação ao seu dia e aprendizado com IA local.</p>
           <div class="hdr-highlight">
-            <div class="hdr-label"><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><h3 id="hdr-title">HDR Protection</h3></div>
-            <p>Ao detectar conteúdo HDR, o LUM4 reduz o boost suavemente para ajudar a preservar os detalhes e a qualidade da imagem. Quando o conteúdo termina, retoma o ajuste escolhido.</p>
-            <small>Proteção opcional, com permissão de gravação de tela. As capturas da detecção não são salvas.</small>
+            <div class="hdr-label"><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><h3 id="hdr-title" data-i18n="hdr.title">HDR Protection</h3></div>
+            <p data-i18n="hdr.description">Ao detectar conteúdo HDR, o LUM4 reduz o boost suavemente para ajudar a preservar os detalhes e a qualidade da imagem. Quando o conteúdo termina, retoma o ajuste escolhido.</p>
+            <small data-i18n="hdr.privacy">Proteção opcional, com permissão de gravação de tela. As capturas da detecção não são salvas.</small>
           </div>
         </div>
         <div class="mode-details">
-          <div class="mode-tabs" role="tablist" aria-label="Modos do LUM4">
-            <button id="tab-manual" type="button" role="tab" aria-selected="true" aria-controls="mode-panel" tabindex="0" data-mode="manual"><svg class="icon" aria-hidden="true"><use href="#i-sliders" /></svg>Manual</button>
-            <button id="tab-automatic" type="button" role="tab" aria-selected="false" aria-controls="mode-panel" tabindex="-1" data-mode="automatic"><svg class="icon" aria-hidden="true"><use href="#i-clock" /></svg>Automático</button>
-            <button id="tab-intelligent" type="button" role="tab" aria-selected="false" aria-controls="mode-panel" tabindex="-1" data-mode="intelligent"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg>Inteligente</button>
+          <div class="mode-tabs" role="tablist" aria-label="Modos do LUM4" data-i18n-aria-label="modes.tabs">
+            <button id="tab-manual" type="button" role="tab" aria-selected="true" aria-controls="mode-panel" tabindex="0" data-mode="manual"><svg class="icon" aria-hidden="true"><use href="#i-sliders" /></svg><span data-i18n="modes.manual">Manual</span></button>
+            <button id="tab-automatic" type="button" role="tab" aria-selected="false" aria-controls="mode-panel" tabindex="-1" data-mode="automatic"><svg class="icon" aria-hidden="true"><use href="#i-clock" /></svg><span data-i18n="modes.automatic">Automático</span></button>
+            <button id="tab-intelligent" type="button" role="tab" aria-selected="false" aria-controls="mode-panel" tabindex="-1" data-mode="intelligent"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span data-i18n="modes.intelligent">Inteligente</span></button>
           </div>
           <div id="mode-panel" class="mode-panel" role="tabpanel" aria-labelledby="tab-manual" tabindex="0">
-            <span class="mode-status" id="mode-status">Implementado no app</span>
+            <span class="mode-status" id="mode-status">Controle manual</span>
             <h3 id="mode-title">O controle está com você.</h3>
             <p id="mode-description">Escolha o boost entre 0 e 100% da escala LUM4. O brilho muda suavemente, respeitando a capacidade da sua tela e um teto pensado para preservar a imagem.</p>
             <p id="mode-extra" class="mode-extra">O brilho normal do macOS continua sob seu controle. Com HDR Protection ativado, o boost é limitado durante conteúdo HDR para ajudar a preservar seus detalhes.</p>
@@ -123,33 +131,33 @@
       </section>
 
       <section class="purchase-section wrap" id="comprar" aria-labelledby="purchase-title">
-        <div class="purchase-copy"><img class="purchase-mark" src="/assets/lum4-mark.png" alt="" width="64" height="64" loading="lazy" /><p class="eyebrow">LUM4 by ALLM4</p><h2 id="purchase-title">Um pequeno app.<br /><span>Uma diferença que brilha.</span></h2><p>Feito para MacBook Pro com tela Liquid Retina XDR.<br />Leve na experiência. Presente quando você precisa.</p></div>
+        <div class="purchase-copy"><img class="purchase-mark" src="/assets/lum4-mark.png" alt="" width="64" height="64" loading="lazy" /><p class="eyebrow">LUM4 by ALLM4</p><h2 id="purchase-title" data-i18n-html="purchase.title">Um pequeno app.<br /><span>Uma diferença que brilha.</span></h2><p data-i18n-html="purchase.description">Feito para MacBook Pro com tela Liquid Retina XDR.<br />Leve na experiência. Presente quando você precisa.</p></div>
         <div class="purchase-card">
-          <div class="purchase-card-heading"><span>Licença LUM4</span><span class="purchase-availability" data-sale-status>Em breve</span></div>
+          <div class="purchase-card-heading"><span data-i18n="purchase.license">Licença LUM4</span><span class="purchase-availability" data-sale-status>Para macOS</span></div>
           <p class="price" data-price>R$ 14,99</p>
-          <p class="price-caption">Mais luz, com um controle simples.</p>
+          <p class="price-caption" data-i18n="purchase.caption">Mais luz, com um controle simples.</p>
           <ul class="purchase-features">
-            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg>Boost XDR com ajuste manual</li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg>HDR Protection para cuidar da imagem</li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg>App nativo na barra de menus</li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.manual">Boost XDR com ajuste manual</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.hdr">HDR Protection para cuidar da imagem</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.native">App nativo na barra de menus</span></li>
           </ul>
-          <p class="purchase-roadmap"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg>A caminho: Automático e Inteligente com IA local.</p>
-          <a class="button button-primary purchase-button" href="/api/checkout" data-checkout>Comprar LUM4<svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
-          <p class="purchase-footnote" data-checkout-note>A compra será liberada no lançamento.</p>
+          <p class="purchase-roadmap"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span data-i18n="purchase.roadmap">Modos Manual, Automático e Inteligente com IA local.</span></p>
+          <a class="button button-primary purchase-button" href="/api/checkout" data-checkout><span data-i18n="actions.buyApp">Comprar LUM4</span><svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          <p class="purchase-footnote" data-checkout-note>Licença para macOS.</p>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer wrap"><a class="footer-brand" href="#">LUM4 <span>by ALLM4</span></a><p>Mais luz para o que importa.</p><span>Feito para macOS.</span></footer>
+    <footer class="site-footer wrap"><a class="footer-brand" href="#">LUM4 <span>by ALLM4</span></a><p data-i18n="footer.slogan">Mais luz para o que importa.</p><span data-i18n="footer.platform">Feito para macOS.</span></footer>
 
     <dialog id="availability-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
-      <button id="dialog-close" class="dialog-close" type="button" aria-label="Fechar"><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></button>
+      <button id="dialog-close" class="dialog-close" type="button" aria-label="Fechar" data-i18n-aria-label="dialog.close"><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></button>
       <img src="/assets/lum4-mark.png" width="56" height="56" alt="" />
       <p class="eyebrow">LUM4 by ALLM4</p>
-      <h2 id="dialog-title">Mais luz, em breve.</h2>
-      <p id="dialog-description">A primeira versão pública do LUM4 está em preparação. O download será disponibilizado aqui no lançamento.</p>
-      <button type="button" class="button button-primary" id="dialog-done">Entendi</button>
+      <h2 id="dialog-title">Download indisponível nesta página.</h2>
+      <p id="dialog-description">O link de download ainda não está disponível nesta página. O LUM4 funciona no macOS 26 ou mais recente, em MacBook Pro com tela XDR compatível.</p>
+      <button type="button" class="button button-primary" id="dialog-done" data-i18n="dialog.done">Entendi</button>
     </dialog>
-    <noscript><p class="noscript-note">Ative o JavaScript para experimentar a prévia e consultar a disponibilidade do download e da compra.</p></noscript>
+    <noscript><p class="noscript-note" data-i18n="noscript">Ative o JavaScript para experimentar a prévia e consultar a disponibilidade do download e da compra.</p></noscript>
   </body>
 </html>

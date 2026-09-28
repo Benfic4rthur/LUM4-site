@@ -5,6 +5,47 @@ const image = document.querySelector('#preview-image');
 const stateLabel = document.querySelector('#boost-state');
 const dialog = document.querySelector('#availability-dialog');
 let product = { downloadAvailable: false, checkoutAvailable: false, downloads: 0, price: 14.99, currency: 'BRL' };
+let productLoaded = false;
+let productUnavailable = false;
+let availabilityType = 'download';
+const locales = window.LUM4_LOCALES;
+function validLanguage(value) { return typeof value === 'string' && Object.hasOwn(locales, value); }
+function initialLanguage() {
+  const requested = new URL(window.location.href).searchParams.get('lang');
+  if (validLanguage(requested)) return requested;
+  try {
+    const saved = localStorage.getItem('lum4-language');
+    if (validLanguage(saved)) return saved;
+  } catch { /* The language buttons also work when storage is blocked. */ }
+  return 'pt';
+}
+let language = initialLanguage();
+function copy() { return locales[language]; }
+function message(key, values = {}) {
+  return copy().dynamic[key].replace(/\{(\w+)\}/g, (placeholder, name) => values[name] ?? placeholder);
+}
+function translateStatic() {
+  document.documentElement.lang = copy().locale;
+  const bindings = [
+    ['data-i18n', null], ['data-i18n-html', 'html'],
+    ['data-i18n-aria-label', 'aria-label'], ['data-i18n-aria-roledescription', 'aria-roledescription'],
+    ['data-i18n-content', 'content']
+  ];
+  bindings.forEach(([binding, attribute]) => {
+    document.querySelectorAll(`[${binding}]`).forEach(element => {
+      const value = copy().strings[element.getAttribute(binding)];
+      if (typeof value !== 'string') return;
+      // HTML comes only from the bundled, reviewed translation catalog.
+      if (attribute === 'html') element.innerHTML = value;
+      else if (attribute) element.setAttribute(attribute, value);
+      else element.textContent = value;
+    });
+  });
+  document.querySelectorAll('[data-language]').forEach(button => {
+    button.setAttribute('aria-pressed', String(button.dataset.language === language));
+  });
+}
+translateStatic();
 const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
 const heroLight = document.querySelector('#hero-title > span');
 if (heroLight && !motionPreference.matches) {
@@ -15,12 +56,13 @@ if (heroLight && !motionPreference.matches) {
   });
 }
 const scenes = [
-  { src: '/assets/ocean-sunrise.webp', alt: 'Sol dourado no horizonte sobre as ondas de um oceano azul.', name: 'Pôr do sol', base: 0.715, step: 0.008 },
-  { src: '/assets/night-lake.webp', alt: 'Lago de montanha à noite, com reflexos da lua e uma pequena cabana iluminada.', name: 'Cena escura', base: 0.56, step: 0.01 },
-  { src: '/assets/snow-day.webp', alt: 'Montanhas cobertas de neve sob o sol, com texturas claras e céu azul.', name: 'Cena clara', base: 0.82, step: 0.0036 }
+  { src: '/assets/ocean-sunrise.webp', base: 0.715, step: 0.008 },
+  { src: '/assets/night-lake.webp', base: 0.56, step: 0.01 },
+  { src: '/assets/snow-day.webp', base: 0.82, step: 0.0036 }
 ];
 let currentScene = 0;
 let sceneRequest = 0;
+let sceneFailed = false;
 
 function updatePreview() {
   const active = toggle.getAttribute('aria-checked') === 'true';
@@ -28,9 +70,9 @@ function updatePreview() {
   output.replaceChildren(document.createTextNode(String(boost)), Object.assign(document.createElement('span'), { textContent: '%' }));
   image.style.filter = `brightness(${scenes[currentScene].base + boost * scenes[currentScene].step})`;
   range.style.setProperty('--progress', `${range.value}%`);
-  range.setAttribute('aria-valuetext', `${boost} por cento`);
+  range.setAttribute('aria-valuetext', message('percent', { value: boost }));
   range.disabled = !active;
-  stateLabel.textContent = !active || boost === 0 ? 'Sem boost' : boost < 35 ? 'Brilho suave' : boost < 80 ? 'Luz na medida' : 'Mais luz';
+  stateLabel.textContent = message(!active || boost === 0 ? 'boostOff' : boost < 35 ? 'boostSoft' : boost < 80 ? 'boostBalanced' : 'boostHigh');
 }
 range.addEventListener('input', updatePreview);
 toggle.addEventListener('click', () => {
@@ -40,6 +82,12 @@ toggle.addEventListener('click', () => {
 updatePreview();
 
 const sceneButtons = [...document.querySelectorAll('[data-scene]')];
+function updateSceneCopy(announce = false) {
+  image.alt = copy().scenes[currentScene].alt;
+  if (announce || sceneFailed || document.querySelector('#scene-announcement').textContent) document.querySelector('#scene-announcement').textContent = sceneFailed
+    ? message('sceneError')
+    : message('sceneAnnouncement', { index: currentScene + 1, total: scenes.length, name: copy().scenes[currentScene].name });
+}
 async function selectScene(index) {
   const request = ++sceneRequest;
   const scene = scenes[index];
@@ -50,15 +98,17 @@ async function selectScene(index) {
     await nextImage.decode();
     if (request !== sceneRequest) return;
     currentScene = index;
+    sceneFailed = false;
     image.src = scene.src;
-    image.alt = scene.alt;
+    updateSceneCopy(true);
     sceneButtons.forEach(button => button.setAttribute('aria-pressed', String(Number(button.dataset.scene) === index)));
     document.querySelector('#scene-position').textContent = `${index + 1} / ${scenes.length}`;
-    document.querySelector('#scene-announcement').textContent = `Cena ${index + 1} de ${scenes.length}: ${scene.name}.`;
     updatePreview();
     if (!motionPreference.matches) image.animate([{ opacity: 0.75 }, { opacity: 1 }], { duration: 240, easing: 'ease-out' });
   } catch {
-    document.querySelector('#scene-announcement').textContent = 'Não foi possível carregar essa cena. Tente novamente.';
+    if (request !== sceneRequest) return;
+    sceneFailed = true;
+    updateSceneCopy();
   }
 }
 sceneButtons.forEach((button, index) => {
@@ -71,14 +121,9 @@ sceneButtons.forEach((button, index) => {
   });
 });
 
-const modes = {
-  manual: { status: 'Implementado no app', title: 'O controle está com você.', description: 'Escolha o boost entre 0 e 100% da escala LUM4. O brilho muda suavemente, respeitando a capacidade da sua tela e um teto pensado para preservar a imagem.', extra: 'O brilho normal do macOS continua sob seu controle. Com HDR Protection ativado, o boost é limitado durante conteúdo HDR para ajudar a preservar seus detalhes.', note: 'Ajuste a intensidade. Encontre a sua luz.', icon: 'sun' },
-  automatic: { status: 'Em desenvolvimento', title: 'A luz acompanha o seu dia.', description: 'O modo Automático vai combinar o brilho atual do Mac com seus horários e limites. Uma curva suave adapta o boost ao longo do dia, sem precisar de IA.', extra: 'Você poderá definir limites diferentes para o dia e a noite. As mudanças entre horários serão graduais, para manter a experiência confortável.', note: 'Brilho do Mac + seus horários. Tudo em harmonia.', icon: 'clock' },
-  intelligent: { status: 'Em desenvolvimento', title: 'Uma luz que aprende com você.', description: 'A IA local vai reconhecer padrões nas correções que você repete e adaptar as preferências do Automático. Um ajuste isolado não vira regra: o aprendizado acontece quando há consistência.', extra: 'O modelo será baixado ao ativar o recurso e executado em momentos pontuais. Seu histórico ficará no Mac, com opções para pausar, redefinir ou apagar o aprendizado.', note: 'Aprende suas preferências. Respeita os limites da tela.', icon: 'shield' }
-};
 const tabs = [...document.querySelectorAll('[data-mode]')];
 function selectMode(tab, focus = false) {
-  const mode = modes[tab.dataset.mode];
+  const mode = copy().modes[tab.dataset.mode];
   tabs.forEach(item => { item.setAttribute('aria-selected', String(item === tab)); item.tabIndex = item === tab ? 0 : -1; });
   document.querySelector('#mode-panel').setAttribute('aria-labelledby', tab.id);
   document.querySelector('#mode-title').textContent = mode.title;
@@ -88,7 +133,6 @@ function selectMode(tab, focus = false) {
   document.querySelector('#mode-note-icon use').setAttribute('href', `#i-${mode.icon}`);
   const status = document.querySelector('#mode-status');
   status.textContent = mode.status;
-  status.classList.toggle('planned', tab.dataset.mode !== 'manual');
   if (focus) tab.focus();
 }
 tabs.forEach(tab => {
@@ -103,12 +147,17 @@ tabs.forEach(tab => {
   });
 });
 
+function formattedPrice() {
+  return new Intl.NumberFormat(copy().locale, { style: 'currency', currency: product.currency, currencyDisplay: language === 'pt' ? 'symbol' : 'code' }).format(product.price);
+}
+function updateDialog() {
+  const prefix = availabilityType === 'checkout' ? 'checkout' : 'download';
+  document.querySelector('#dialog-title').textContent = message(`${prefix}DialogTitle`);
+  document.querySelector('#dialog-description').textContent = message(`${prefix}DialogDescription`, { price: formattedPrice() });
+}
 function showAvailability(type) {
-  const purchase = type === 'checkout';
-  document.querySelector('#dialog-title').textContent = purchase ? 'Sua nova luz está chegando.' : 'Mais luz, em breve.';
-  document.querySelector('#dialog-description').textContent = purchase
-    ? 'A compra do LUM4 será liberada no lançamento. O preço previsto é ' + new Intl.NumberFormat('pt-BR', { style: 'currency', currency: product.currency }).format(product.price) + '. Volte a esta página para adquirir sua licença quando as vendas estiverem disponíveis.'
-    : 'A primeira versão pública do LUM4 está em preparação. O download será disponibilizado aqui no lançamento. O app foi pensado para macOS 26 ou mais recente e MacBook Pro com tela XDR compatível.';
+  availabilityType = type;
+  updateDialog();
   dialog.showModal();
 }
 document.querySelectorAll('[data-download]').forEach(link => link.addEventListener('click', event => {
@@ -124,24 +173,54 @@ dialog.addEventListener('click', event => {
   if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();
 });
 
+function renderProduct() {
+  document.querySelectorAll('[data-price]').forEach(item => { item.textContent = formattedPrice(); });
+  document.querySelector('[data-download-count]').textContent = productUnavailable ? '—' : new Intl.NumberFormat(copy().locale).format(product.downloads);
+  document.querySelector('[data-download-unit]').textContent = message(productLoaded && product.downloads === 1 ? 'downloadOne' : 'downloadOther');
+  document.querySelector('[data-release-status]').textContent = message(productUnavailable ? 'downloadUnavailable' : product.downloadAvailable ? 'downloadReady' : 'downloadSoon');
+  document.querySelector('[data-sale-status]').textContent = message(product.checkoutAvailable ? 'saleReady' : 'saleSoon');
+  document.querySelector('[data-checkout-note]').textContent = message(product.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon');
+  if (dialog.open) updateDialog();
+}
 async function refreshProduct() {
   try {
     const response = await fetch('/api/product', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
     if (!response.ok) throw new Error('Product unavailable');
     const data = await response.json();
-    if (typeof data.downloadAvailable !== 'boolean' || typeof data.checkoutAvailable !== 'boolean' || !Number.isSafeInteger(data.downloads) || data.downloads < 0 || typeof data.price !== 'number') throw new Error('Invalid product');
+    if (typeof data.downloadAvailable !== 'boolean' || typeof data.checkoutAvailable !== 'boolean' || !Number.isSafeInteger(data.downloads) || data.downloads < 0 || !Number.isFinite(data.price) || data.price < 0 || typeof data.currency !== 'string' || !/^[A-Z]{3}$/.test(data.currency)) throw new Error('Invalid product');
     product = data;
-    const formattedPrice = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: product.currency }).format(product.price);
-    document.querySelectorAll('[data-price]').forEach(item => { item.textContent = formattedPrice; });
-    document.querySelector('[data-download-count]').textContent = new Intl.NumberFormat('pt-BR').format(product.downloads);
-    document.querySelector('[data-release-status]').textContent = product.downloadAvailable ? 'Download disponível' : 'Versão pública em breve';
-    document.querySelector('[data-sale-status]').textContent = product.checkoutAvailable ? 'Disponível' : 'Em breve';
-    document.querySelector('[data-checkout-note]').textContent = product.checkoutAvailable ? 'Você será direcionado para o pagamento.' : 'A compra será liberada no lançamento.';
+    productLoaded = true;
+    productUnavailable = false;
   } catch {
-    document.querySelector('[data-download-count]').textContent = '—';
-    document.querySelector('[data-release-status]').textContent = 'Consulta indisponível';
+    productUnavailable = true;
+  }
+  renderProduct();
+}
+function setLanguage(next, persist = true) {
+  if (!validLanguage(next)) return;
+  language = next;
+  translateStatic();
+  updatePreview();
+  updateSceneCopy();
+  selectMode(tabs.find(tab => tab.getAttribute('aria-selected') === 'true'));
+  renderProduct();
+  if (persist) {
+    try { localStorage.setItem('lum4-language', language); } catch { /* Optional preference only. */ }
+    try {
+      const url = new URL(window.location.href);
+      if (language === 'pt') url.searchParams.delete('lang');
+      else url.searchParams.set('lang', language);
+      window.history.replaceState(null, '', url);
+    } catch { /* Language switching does not depend on a writable URL. */ }
+    document.querySelector('#language-announcement').textContent = message('languageSelected');
   }
 }
+document.querySelectorAll('[data-language]').forEach(button => button.addEventListener('click', () => {
+  if (button.dataset.language !== language) setLanguage(button.dataset.language);
+}));
+updateSceneCopy();
+selectMode(tabs[0]);
+renderProduct();
 refreshProduct();
 window.addEventListener('focus', refreshProduct);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshProduct(); });
