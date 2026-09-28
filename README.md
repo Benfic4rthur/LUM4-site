@@ -49,6 +49,7 @@ A capa de compartilhamento é renderizada de `scripts/share-card.html` em 1200 �
 - Carrossel manual com três cenas: pôr do sol, lago noturno e montanhas claras. Sem rotação automática; cada imagem grande adicional só carrega quando escolhida.
 - IA local aparece em destaque, com detalhes sobre correções repetidas, execução pontual e controle do histórico.
 - HDR Protection tem explicação própria: redução suave durante HDR, retorno depois e permissão opcional de gravação de tela, sem salvar capturas. Não promete ausência absoluta de perdas nos realces.
+- A nota sobre a tela explica o uso de EDR nativo e os limites de hardware. Os detalhes ficam recolhidos para manter a página leve, com links à Apple sobre [EDR](https://developer.apple.com/videos/play/wwdc2021/10161/) e [limitação de brilho em temperaturas elevadas](https://support.apple.com/en-us/101865). O mecanismo do app foi conferido: renderização Metal/EDR e teto baseado na capacidade potencial informada por `NSScreen`. Isso não é uma certificação da Apple nem uma garantia de ausência de desgaste; o texto também informa que brilho intenso pode aumentar o consumo de energia.
 - Marca original do app; fotografia criada para a página e comprimida em WebP.
 - Fontes do sistema, sem bibliotecas de interface, rastreadores ou serviços externos no carregamento.
 - Responsivo, controles por teclado, modais nativos e respeito à preferência de movimento reduzido.

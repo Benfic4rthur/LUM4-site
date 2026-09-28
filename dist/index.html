@@ -29,8 +29,8 @@
     <link rel="icon" type="image/png" sizes="64x64" href="/assets/lum4-favicon-64-v3.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v3.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=plans1" />
-    <script src="/locales.js?v=plans1" defer></script>
+    <link rel="stylesheet" href="/styles.css?v=display-care1" />
+    <script src="/locales.js?v=display-care1" defer></script>
     <script src="/app.js?v=plans1" defer></script>
   </head>
   <body>
@@ -146,6 +146,19 @@
           </div>
         </div>
       </section>
+
+      <aside class="display-care wrap" id="cuidado-tela" aria-labelledby="display-care-title">
+        <svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg>
+        <div>
+          <h3 id="display-care-title" data-i18n="care.title">Mais luz. Respeito aos limites da tela.</h3>
+          <p data-i18n="care.description">O LUM4 usa a tecnologia EDR do macOS para aproveitar o brilho XDR disponível, sem alterar os limites de hardware da tela.</p>
+          <details class="display-care-details">
+            <summary data-i18n="care.more">Sobre brilho e segurança</summary>
+            <p data-i18n="care.details">As proteções do macOS continuam ativas: o sistema pode limitar o brilho em temperaturas elevadas. Como em outros usos de brilho intenso, o consumo de energia pode aumentar.</p>
+            <div class="display-care-sources"><a href="https://developer.apple.com/videos/play/wwdc2021/10161/" data-i18n="care.edrSource">EDR na documentação Apple</a><a href="https://support.apple.com/en-us/101865" data-i18n="care.brightnessSource">Proteções de brilho da Apple</a></div>
+          </details>
+        </div>
+      </aside>
 
       <section class="purchase-section wrap" id="comprar" aria-labelledby="purchase-title">
         <div class="purchase-copy"><img class="purchase-mark" src="/assets/lum4-mark.png" alt="" width="64" height="64" loading="lazy" /><p class="eyebrow">LUM4 by ALLM4</p><h2 id="purchase-title" data-i18n-html="purchase.title">Um pequeno app.<br /><span>Uma diferença que brilha.</span></h2><p data-i18n-html="purchase.description">Feito para MacBook Pro com tela Liquid Retina XDR.<br />Leve na experiência. Presente quando você precisa.</p></div>
