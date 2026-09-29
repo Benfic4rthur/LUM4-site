@@ -315,3 +315,49 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
   .checkout-plan-switch{grid-column:1;flex-wrap:wrap}
   .checkout-price-box{grid-column:1;justify-content:flex-start}
 }
+
+
+/* Live sales counter below the purchase CTA. */
+.purchase-sales-counter{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:fit-content;
+  margin:11px auto 2px;
+  padding:7px 11px;
+  border:1px solid #ffbd7436;
+  border-radius:999px;
+  background:linear-gradient(120deg,#ffb66c0b,#ffffff02);
+  color:#b8abb0;
+  font-size:.72rem;
+  line-height:1;
+  letter-spacing:.05px;
+  white-space:nowrap;
+}
+.purchase-sales-counter strong{
+  color:#ffd3a0;
+  font-size:.78rem;
+  font-weight:720;
+  font-variant-numeric:tabular-nums;
+}
+.purchase-sales-dot{
+  width:6px;
+  height:6px;
+  flex:0 0 auto;
+  border-radius:50%;
+  background:#ffad5f;
+  box-shadow:0 0 0 4px #ffad5f12,0 0 13px #ffad5f68;
+  animation:lum4-sales-pulse 2.4s ease-in-out infinite;
+}
+.purchase-sales-counter[hidden]{display:none!important}
+@keyframes lum4-sales-pulse{
+  0%,100%{opacity:.68;transform:scale(.92)}
+  50%{opacity:1;transform:scale(1.12)}
+}
+@media(prefers-reduced-motion:reduce){
+  .purchase-sales-dot{animation:none}
+}
+@media(max-width:640px){
+  .purchase-sales-counter{font-size:.69rem}
+}
