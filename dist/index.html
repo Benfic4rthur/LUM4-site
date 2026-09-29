@@ -211,8 +211,19 @@
         <div class="checkout-summary">
           <span data-i18n="checkout.selectedPlan">Plano selecionado</span>
           <strong data-checkout-plan>1 Mac</strong>
-          <span data-checkout-price>R$ 14,99</span>
+          <div class="checkout-price-box">
+            <span data-checkout-original-price hidden></span>
+            <span data-checkout-price>R$ 14,99</span>
+          </div>
         </div>
+        <label class="checkout-public-coupon" data-checkout-public-coupon hidden>
+          <input id="checkout-use-public-coupon" type="checkbox" />
+          <span class="checkout-public-coupon-copy">
+            <strong><span data-i18n="purchase.couponAvailable">Cupom disponível</span>: <span data-checkout-public-coupon-code></span></strong>
+            <small data-checkout-public-coupon-discount></small>
+          </span>
+          <span class="checkout-public-coupon-check" aria-hidden="true">✓</span>
+        </label>
         <label class="checkout-field">
           <span data-i18n="checkout.email">Seu e-mail</span>
           <input id="checkout-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="voce@exemplo.com" data-i18n-placeholder="checkout.emailPlaceholder" />
