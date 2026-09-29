@@ -388,8 +388,9 @@ function renderProduct() {
   document.querySelectorAll('[data-plan-price]').forEach(item => {
     item.textContent = formattedPrice(product.plans.find(option => option.devices === Number(item.dataset.planPrice)).price);
   });
-  document.querySelectorAll('[data-checkout]').forEach(link => {
-    link.href = staticHosting && plan.checkoutAvailable ? plan.checkoutUrl : `/api/checkout?devices=${selectedDevices}`;
+  document.querySelectorAll('[data-checkout]').forEach(button => {
+    button.disabled = !plan.checkoutAvailable;
+    button.setAttribute('aria-disabled', String(!plan.checkoutAvailable));
   });
   const separatePrice = Math.round(product.plans[0].price * 100) * 3;
   const savings = Math.max(0, separatePrice - Math.round(product.plans[2].price * 100));
@@ -403,35 +404,133 @@ function renderProduct() {
   document.querySelector('[data-release-status]').textContent = message(productUnavailable ? 'downloadUnavailable' : product.downloadAvailable ? 'downloadReady' : 'downloadSoon');
   document.querySelector('[data-sale-status]').textContent = message(plan.checkoutAvailable ? 'saleReady' : 'saleSoon');
   document.querySelector('[data-checkout-note]').textContent = message(plan.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon', { devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
+  renderPublishedCoupon();
+  if (checkoutDialog.open) renderCheckoutSummary();
   if (dialog.open) updateDialog();
 }
+
+function validPublicCoupon(value) {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    typeof value.code === 'string' &&
+    value.code.length >= 3 &&
+    value.code.length <= 64 &&
+    Number.isInteger(value.discountPercent) &&
+    value.discountPercent >= 1 &&
+    value.discountPercent <= 99
+  );
+}
+
 async function refreshProduct() {
+  let downloadData = null;
+
   try {
-    const response = await fetch(staticHosting ? '/product.json?v=plans1' : '/api/product', { signal: AbortSignal.timeout(5000), cache: 'no-store' });
-    if (!response.ok) throw new Error('Product unavailable');
-    const data = await response.json();
-    const validCount = Number.isSafeInteger(data.downloads) && data.downloads >= 0 || staticHosting && data.downloads === null;
-    if (typeof data.downloadAvailable !== 'boolean' || typeof data.checkoutAvailable !== 'boolean' || !validCount || !Number.isFinite(data.price) || data.price < 0 || typeof data.currency !== 'string' || !/^[A-Z]{3}$/.test(data.currency)) throw new Error('Invalid product');
-    if (!Array.isArray(data.plans) || data.plans.length !== 3 || !data.plans.every((plan, index) => plan?.devices === index + 1 && Number.isFinite(plan.price) && plan.price >= 0 && typeof plan.checkoutAvailable === 'boolean')) throw new Error('Invalid license plans');
-    if (staticHosting) {
-      for (const plan of data.plans) {
-        if (!plan.checkoutAvailable) continue;
-        const target = new URL(plan.checkoutUrl);
-        if (target.protocol !== 'https:' || target.username || target.password) throw new Error('Invalid plan link');
-      }
-      for (const [key, flag, selector] of [['downloadUrl', 'downloadAvailable', '[data-download]']]) {
-        if (!data[flag]) continue;
-        const target = new URL(data[key]);
-        if (target.protocol !== 'https:' || target.username || target.password) throw new Error('Invalid public link');
-        document.querySelectorAll(selector).forEach(link => { link.href = target.href; });
+    const response = await fetch(staticHosting ? '/product.json?v=checkout2' : '/api/product', {
+      signal: AbortSignal.timeout(5000),
+      cache: 'no-store'
+    });
+    if (response.ok) {
+      const data = await response.json();
+      const validCount =
+        (Number.isSafeInteger(data.downloads) && data.downloads >= 0) ||
+        (staticHosting && data.downloads === null);
+      if (
+        typeof data.downloadAvailable === 'boolean' &&
+        validCount
+      ) {
+        downloadData = data;
+        if (staticHosting && data.downloadAvailable && typeof data.downloadUrl === 'string') {
+          const target = new URL(data.downloadUrl);
+          if (target.protocol === 'https:' && !target.username && !target.password) {
+            document.querySelectorAll('[data-download]').forEach(link => {
+              link.href = target.href;
+            });
+          }
+        }
       }
     }
-    product = data;
+  } catch {
+    downloadData = null;
+  }
+
+  try {
+    const [plansResponse, couponsResponse] = await Promise.all([
+      fetch(`${licenseApiBase}/v1/plans`, {
+        signal: AbortSignal.timeout(8000),
+        cache: 'no-store',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        headers: { Accept: 'application/json' }
+      }),
+      fetch(`${licenseApiBase}/v1/coupons/public`, {
+        signal: AbortSignal.timeout(8000),
+        cache: 'no-store',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        headers: { Accept: 'application/json' }
+      })
+    ]);
+
+    if (!plansResponse.ok) throw new Error('Plans unavailable');
+    const plansData = await plansResponse.json();
+    if (
+      typeof plansData.currency !== 'string' ||
+      !/^[A-Z]{3}$/.test(plansData.currency) ||
+      !Array.isArray(plansData.plans)
+    ) throw new Error('Invalid plans');
+
+    const plans = plansData.plans
+      .map(plan => ({
+        id: plan?.id,
+        devices: plan?.maxDevices,
+        price: Number(plan?.priceBRL),
+        checkoutAvailable: true
+      }))
+      .filter(plan =>
+        typeof plan.id === 'string' &&
+        Number.isInteger(plan.devices) &&
+        plan.devices >= 1 &&
+        plan.devices <= 3 &&
+        Number.isFinite(plan.price) &&
+        plan.price > 0
+      )
+      .sort((a, b) => a.devices - b.devices);
+
+    if (plans.length !== 3 || plans.some((plan, index) => plan.devices !== index + 1)) {
+      throw new Error('Invalid plans');
+    }
+
+    let nextCoupon = null;
+    if (couponsResponse.ok) {
+      const couponData = await couponsResponse.json();
+      if (Array.isArray(couponData.coupons)) {
+        nextCoupon = couponData.coupons.find(validPublicCoupon) ?? null;
+      }
+    }
+
+    product = {
+      downloadAvailable: Boolean(downloadData?.downloadAvailable),
+      downloads: downloadData?.downloads ?? (staticHosting ? null : 0),
+      price: plans[0].price,
+      currency: plansData.currency,
+      checkoutAvailable: true,
+      plans
+    };
+    publishedCoupon = nextCoupon;
     productLoaded = true;
     productUnavailable = false;
   } catch {
     productUnavailable = true;
+    product = {
+      ...product,
+      downloadAvailable: Boolean(downloadData?.downloadAvailable),
+      downloads: downloadData?.downloads ?? (staticHosting ? null : 0),
+      checkoutAvailable: false,
+      plans: product.plans.map(plan => ({ ...plan, checkoutAvailable: false }))
+    };
   }
+
   renderProduct();
 }
 function setLanguage(next, persist = true) {
