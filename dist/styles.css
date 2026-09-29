@@ -215,3 +215,42 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 .checkout-brandline img{display:block;margin:0;border-radius:50%}
 .checkout-brandline .eyebrow{margin:0;font-size:.6875rem;letter-spacing:1.45px;white-space:nowrap}
 .checkout-dialog .checkout-brandline+h2{margin-top:0}
+
+/* Keep checkout top-biased and stable after the Pix expands the modal. */
+.checkout-dialog{
+  --checkout-top:clamp(28px,5vh,56px);
+  top:var(--checkout-top);
+  bottom:auto;
+  margin:0 auto;
+  max-height:calc(100dvh - var(--checkout-top) - 16px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+}
+.checkout-dialog .pix-result{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  justify-items:stretch;
+}
+.checkout-dialog .pix-qr{
+  justify-self:center;
+  margin:4px auto;
+}
+.checkout-dialog .pix-code-row{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  overflow:hidden;
+}
+.checkout-dialog .pix-code-row code{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+}
+@media(max-width:640px){
+  .checkout-dialog{
+    --checkout-top:16px;
+    max-height:calc(100dvh - 32px);
+  }
+}
