@@ -42,13 +42,13 @@ A prévia local mantém o mecanismo anterior em `data/downloads.json`, que regis
 
 A capa de compartilhamento é renderizada de `scripts/share-card.html` em 1200 × 630. O símbolo vem da arte original em `scripts/brand-reference.png`, enquadrada em tamanho nativo; não é um redesenho nem uma ampliação do ícone de 64 pixels usado no cabeçalho. Os ícones pequenos usam a marca original de `dist/assets/lum4-mark.png`. Ao trocar a capa, use um novo nome no `og:image` e `twitter:image` para distinguir a versão publicada.
 
-- Manual, Automático, Inteligente e HDR Protection são apresentados como recursos disponíveis, conforme a confirmação do responsável pelo app.
+- Manual, Automático, Inteligente e Video Detail Protection são apresentados como recursos disponíveis, conforme a confirmação do responsável pelo app.
 - Os botões PT, EN e ES trocam todo o conteúdo, incluindo a prévia, os modos, os avisos, os rótulos acessíveis e os metadados. Inglês e espanhol têm textos adaptados para cada idioma.
 - Português é o padrão. A escolha fica salva apenas no navegador; `?lang=en` e `?lang=es` permitem compartilhar um idioma específico. Bloquear armazenamento não impede a troca de idioma.
 - A demonstração usa uma simulação de brilho no navegador e não ativa EDR real.
 - Carrossel manual com três cenas: pôr do sol, lago noturno e montanhas claras. Sem rotação automática; cada imagem grande adicional só carrega quando escolhida.
 - IA local aparece em destaque, com detalhes sobre correções repetidas, execução pontual e controle do histórico.
-- HDR Protection tem explicação própria: redução suave durante HDR, retorno depois e permissão opcional de gravação de tela, sem salvar capturas. Não promete ausência absoluta de perdas nos realces.
+- Video Detail Protection tem explicação própria: quando o macOS indica reprodução de vídeo, o LUM4 reduz temporariamente o Boost XDR para 50% do valor escolhido, ajudando a preservar detalhes da imagem, e restaura o valor anterior ao terminar. O recurso não captura nem analisa a imagem da tela.
 - A nota sobre a tela explica o uso de EDR nativo e os limites de hardware. Os detalhes ficam recolhidos para manter a página leve, com links à Apple sobre [EDR](https://developer.apple.com/videos/play/wwdc2021/10161/) e [limitação de brilho em temperaturas elevadas](https://support.apple.com/en-us/101865). O mecanismo do app foi conferido: renderização Metal/EDR e teto baseado na capacidade potencial informada por `NSScreen`. Isso não é uma certificação da Apple nem uma garantia de ausência de desgaste; o texto também informa que brilho intenso pode aumentar o consumo de energia.
 - Marca original do app; fotografia criada para a página e comprimida em WebP.
 - Fontes do sistema, sem bibliotecas de interface, rastreadores ou serviços externos no carregamento.
@@ -60,6 +60,6 @@ Os arquivos publicados não contêm credenciais nem código do repositório priv
 
 ## Versão anterior
 
-A primeira versão, antes do carrossel, dos destaques de IA e dos detalhes de HDR Protection, está preservada em `work/snapshots/lum4-site-v1.tar.gz` para permitir reversão.
+A primeira versão, antes do carrossel, dos destaques de IA e da proteção de vídeo, está preservada em `work/snapshots/lum4-site-v1.tar.gz` para permitir reversão.
 
-A versão aprovada com carrossel e HDR Protection, anterior à passagem de luz, está em `work/snapshots/lum4-site-v2-approved.tar.gz`.
+A versão histórica aprovada com o antigo HDR Protection, anterior à passagem de luz, está em `work/snapshots/lum4-site-v2-approved.tar.gz`.
