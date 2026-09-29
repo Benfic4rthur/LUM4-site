@@ -30,7 +30,7 @@
     <link rel="icon" type="image/png" sizes="64x64" href="/assets/lum4-favicon-64-v3.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v3.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=sales-counter1" />
+    <link rel="stylesheet" href="/styles.css?v=sales-counter2" />
     <script src="/locales.js?v=sales-counter1" defer></script>
     <script src="/app.js?v=sales-counter1" defer></script>
   </head>
@@ -180,16 +180,12 @@
           </ul>
           <p class="purchase-roadmap"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span data-i18n="purchase.roadmap">Modos Manual, Automático e Inteligente com IA local.</span></p>
           <button class="button button-primary purchase-button" type="button" data-checkout><span data-i18n="actions.buyApp">Comprar LUM4</span><svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></button>
-          <p class="purchase-sales-counter" data-sales-counter hidden>
-            <span class="purchase-sales-dot" aria-hidden="true"></span>
-            <span><strong data-sales-number>0</strong> <span data-sales-label>vendas realizadas</span></span>
-          </p>
           <p class="purchase-footnote" data-checkout-note>Licença para macOS.</p>
         </div>
       </section>
     </main>
 
-    <footer class="site-footer wrap"><a class="footer-brand" href="#">LUM4 <span>by ALLM4</span></a><p data-i18n="footer.slogan">Mais luz para o que importa.</p><span data-i18n="footer.platform">Feito para macOS.</span></footer>
+    <footer class="site-footer wrap"><a class="footer-brand" href="#">LUM4 <span>by ALLM4</span></a><p data-i18n="footer.slogan">Mais luz para o que importa.</p><div class="footer-meta"><span data-i18n="footer.platform">Feito para macOS.</span><span class="footer-sales-counter" data-sales-counter hidden>· <strong data-sales-number>0</strong> <span data-sales-label>vendas realizadas</span></span></div></footer>
 
     <dialog id="availability-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
       <button id="dialog-close" class="dialog-close" type="button" aria-label="Fechar" data-i18n-aria-label="dialog.close"><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></button>
