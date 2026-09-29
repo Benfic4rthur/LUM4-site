@@ -29,7 +29,7 @@ const licenseCopyStatus = document.querySelector('#license-copy-status');
 const salesCounter = document.querySelector('[data-sales-counter]');
 const salesNumber = document.querySelector('[data-sales-number]');
 const salesLabel = document.querySelector('[data-sales-label]');
-const demoSalesBoost = 12_354;
+const demoSalesBoost = 125;
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 const staticHosting = document.documentElement.dataset.hosting === 'static';
 let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
