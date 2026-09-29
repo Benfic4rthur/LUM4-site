@@ -250,6 +250,17 @@
           <button id="pix-copy" type="button" data-i18n="checkout.copyPix">Copiar Pix</button>
         </div>
         <p id="pix-status" class="pix-status" data-i18n="checkout.waitingPayment">Aguardando confirmação do pagamento…</p>
+        <div class="license-result" data-license-result hidden>
+          <div class="license-result-heading">
+            <span data-i18n="checkout.licenseReady">Sua licença</span>
+            <span class="license-result-sent" data-i18n="checkout.licenseSent">Também enviada para o seu e-mail</span>
+          </div>
+          <div class="license-key-row">
+            <code id="license-key"></code>
+            <button id="license-copy" type="button" data-i18n="checkout.copyLicense">Copiar licença</button>
+          </div>
+          <p id="license-copy-status" class="license-copy-status" hidden></p>
+        </div>
       </section>
     </dialog>
     <noscript><p class="noscript-note" data-i18n="noscript">Ative o JavaScript para experimentar a prévia e consultar a disponibilidade do download e da compra.</p></noscript>
