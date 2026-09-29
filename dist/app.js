@@ -23,6 +23,9 @@ const pixCouponSummary = document.querySelector('[data-pix-coupon-summary]');
 const pixQr = document.querySelector('#pix-qr');
 const pixCode = document.querySelector('#pix-code');
 const pixStatus = document.querySelector('#pix-status');
+const licenseResult = document.querySelector('[data-license-result]');
+const licenseKey = document.querySelector('#license-key');
+const licenseCopyStatus = document.querySelector('#license-copy-status');
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 const staticHosting = document.documentElement.dataset.hosting === 'static';
 let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
@@ -306,7 +309,11 @@ function resetCheckoutResult() {
   pixEmailSummary.textContent = '';
   pixCouponSummary.hidden = true;
   pixCouponSummary.textContent = '';
-  checkoutDialog.classList.remove('pix-created');
+  checkoutDialog.classList.remove('pix-created', 'payment-confirmed');
+  licenseResult.hidden = true;
+  licenseKey.textContent = '';
+  licenseCopyStatus.hidden = true;
+  licenseCopyStatus.textContent = '';
   pixQr.hidden = true;
   pixQr.removeAttribute('src');
   pixCode.textContent = '';
@@ -348,6 +355,18 @@ document.querySelector('#pix-copy').addEventListener('click', async () => {
   }
 });
 
+document.querySelector('#license-copy').addEventListener('click', async () => {
+  if (!licenseKey.textContent) return;
+  try {
+    await navigator.clipboard.writeText(licenseKey.textContent);
+    licenseCopyStatus.textContent = message('checkoutLicenseCopied');
+    licenseCopyStatus.hidden = false;
+  } catch {
+    licenseCopyStatus.textContent = licenseKey.textContent;
+    licenseCopyStatus.hidden = false;
+  }
+});
+
 async function pollPurchase(purchaseId) {
   clearPurchasePoll();
   try {
@@ -362,9 +381,16 @@ async function pollPurchase(purchaseId) {
     const data = await response.json();
     if (activePurchase !== purchaseId) return;
 
-    if (data.licensed === true || (data.status === 'processed' && data.statusDetail === 'accredited')) {
+    if (data.licensed === true && typeof data.licenseKey === 'string' && data.licenseKey.trim()) {
       pixStatus.textContent = message('checkoutPaymentConfirmed');
+      licenseKey.textContent = data.licenseKey.trim();
+      licenseResult.hidden = false;
+      checkoutDialog.classList.add('payment-confirmed');
       return;
+    }
+
+    if (data.status === 'processed' && data.statusDetail === 'accredited') {
+      pixStatus.textContent = message('checkoutPaymentPreparingLicense');
     }
     if (['expired', 'canceled', 'cancelled', 'refunded', 'create_failed'].includes(data.status)) {
       pixStatus.textContent = message('checkoutPaymentFailed');
