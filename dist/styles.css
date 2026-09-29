@@ -254,3 +254,24 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
     max-height:calc(100dvh - 32px);
   }
 }
+
+/* Compact state after the Pix is generated. */
+.pix-purchase-summary{display:flex;align-items:center;justify-content:space-between;gap:8px 14px;flex-wrap:wrap;margin-top:10px;color:#8f9299;font-size:.7rem}
+.pix-purchase-summary [data-pix-email-summary]{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pix-purchase-summary [data-pix-coupon-summary]{color:#d9ae7e;font-weight:600}
+.checkout-dialog.pix-created #checkout-help{display:none}
+.checkout-dialog.pix-created .checkout-form{gap:0}
+.checkout-dialog.pix-created .checkout-form .checkout-field,
+.checkout-dialog.pix-created .checkout-form .checkout-public-coupon,
+.checkout-dialog.pix-created #checkout-submit,
+.checkout-dialog.pix-created .checkout-error{display:none!important}
+.checkout-dialog.pix-created .pix-result{margin-top:12px;padding-top:14px;gap:10px}
+.checkout-dialog.pix-created .pix-qr{width:min(198px,54vw);margin:2px auto}
+.checkout-dialog.pix-created .pix-instruction{font-size:.75rem!important}
+.pix-purchase-summary[hidden]{display:none!important}
+@media(max-height:840px){
+  .checkout-dialog.pix-created .checkout-brandline{margin-bottom:10px}
+  .checkout-dialog.pix-created .checkout-brandline+h2{margin-bottom:10px}
+  .checkout-dialog.pix-created .pix-result{margin-top:10px;padding-top:10px;gap:8px}
+  .checkout-dialog.pix-created .pix-qr{width:min(178px,50vw)}
+}
