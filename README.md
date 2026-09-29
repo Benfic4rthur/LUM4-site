@@ -62,4 +62,4 @@ Os arquivos publicados não contêm credenciais nem código do repositório priv
 
 A primeira versão, antes do carrossel, dos destaques de IA e da proteção de vídeo, está preservada em `work/snapshots/lum4-site-v1.tar.gz` para permitir reversão.
 
-A versão histórica aprovada com o antigo HDR Protection, anterior à passagem de luz, está em `work/snapshots/lum4-site-v2-approved.tar.gz`.
+A versão histórica aprovada com a proteção anterior, antes do Video Detail Protection e da passagem de luz, está em `work/snapshots/lum4-site-v2-approved.tar.gz`.
