@@ -191,3 +191,5 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 .checkout-public-coupon:has(input:checked) .checkout-public-coupon-check{color:#251b11;background:#ffd09a;border-color:#ffd09a}
 .checkout-public-coupon:has(input:checked) .checkout-public-coupon-copy strong{color:#ffe1bd}
 .checkout-field input:disabled{opacity:.45;cursor:not-allowed}
+
+.site-coupon[hidden],.checkout-public-coupon[hidden],.pix-result[hidden],.checkout-error[hidden],.pix-code-row[hidden]{display:none!important}
