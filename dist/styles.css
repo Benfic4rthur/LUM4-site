@@ -275,3 +275,26 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
   .checkout-dialog.pix-created .pix-result{margin-top:10px;padding-top:10px;gap:8px}
   .checkout-dialog.pix-created .pix-qr{width:min(178px,50vw)}
 }
+
+/* License revealed after payment confirmation. */
+.license-result{display:grid;gap:10px;margin-top:4px;padding:14px;border:1px solid #9bc9a038;border-radius:12px;background:#8dcf9810}
+.license-result-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px 14px;flex-wrap:wrap}
+.license-result-heading>span:first-child{color:#dce9de;font-size:.8125rem;font-weight:650}
+.license-result-sent{color:#9da7a0;font-size:.6875rem}
+.license-key-row{display:flex;align-items:stretch;gap:8px;min-width:0}
+.license-key-row code{min-width:0;flex:1;padding:11px 12px;border:1px solid #ffffff18;border-radius:9px;background:#0e0f12;color:#eef4ef;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.75rem;line-height:1.4;overflow-wrap:anywhere;user-select:all}
+.license-key-row button{flex:0 0 auto;border:1px solid #ffffff20;border-radius:9px;background:#ffffff07;color:#dfe8e0;padding:0 12px;font-size:.75rem}
+.license-key-row button:hover{background:#ffffff0d}
+.license-copy-status{margin:0!important;color:#a9c8ae!important;font-size:.6875rem!important;text-align:right}
+.license-result[hidden],.license-copy-status[hidden]{display:none!important}
+.checkout-dialog.payment-confirmed .pix-result-heading,
+.checkout-dialog.payment-confirmed .pix-qr,
+.checkout-dialog.payment-confirmed .pix-instruction,
+.checkout-dialog.payment-confirmed .pix-code-row{display:none!important}
+.checkout-dialog.payment-confirmed .pix-result{margin-top:12px;padding-top:12px}
+.checkout-dialog.payment-confirmed .pix-status{color:#b8d4bc!important}
+@media(max-width:640px){
+  .license-key-row{display:grid}
+  .license-key-row button{min-height:40px}
+  .license-copy-status{text-align:left}
+}
