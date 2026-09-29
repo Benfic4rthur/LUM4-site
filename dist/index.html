@@ -30,8 +30,8 @@
     <link rel="icon" type="image/png" sizes="64x64" href="/assets/lum4-favicon-64-v3.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v3.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=sales-counter2" />
-    <script src="/locales.js?v=sales-counter1" defer></script>
+    <link rel="stylesheet" href="/styles.css?v=video-detail-protection1" />
+    <script src="/locales.js?v=video-detail-protection1" defer></script>
     <script src="/app.js?v=sales-counter1" defer></script>
   </head>
   <body>
@@ -127,9 +127,9 @@
           <p class="eyebrow" data-i18n="modes.eyebrow">Seu brilho, do seu jeito</p><h2 id="modes-title" data-i18n-html="modes.title">Você escolhe.<br /><span>O LUM4 acompanha.</span></h2>
           <p data-i18n="modes.description">Na barra de menus do macOS, a um toque de distância.</p>
           <div class="hdr-highlight">
-            <div class="hdr-label"><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><h3 id="hdr-title" data-i18n="hdr.title">HDR Protection</h3></div>
-            <p data-i18n="hdr.description">Ao detectar conteúdo HDR, o LUM4 reduz o boost suavemente para ajudar a preservar os detalhes e a qualidade da imagem.</p>
-            <small data-i18n="hdr.privacy">Proteção opcional, com permissão de gravação de tela. As capturas da detecção não são salvas.</small>
+            <div class="hdr-label"><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><h3 id="hdr-title" data-i18n="hdr.title">Video Detail Protection</h3></div>
+            <p data-i18n="hdr.description">Quando o macOS indica reprodução de vídeo, o LUM4 reduz temporariamente o Boost XDR para 50% do valor escolhido naquele momento, ajudando a preservar melhor os detalhes da imagem. Ao terminar a reprodução, o boost volta automaticamente ao valor anterior.</p>
+            <small data-i18n="hdr.privacy">Sem capturar ou analisar a imagem da tela.</small>
           </div>
         </div>
         <div class="mode-details">
@@ -142,7 +142,7 @@
             <span class="mode-status" id="mode-status">Controle manual</span>
             <h3 id="mode-title">O controle está com você.</h3>
             <p id="mode-description">Escolha o boost entre 0 e 100% da escala LUM4. O brilho muda suavemente, respeitando a capacidade da sua tela e um teto pensado para preservar a imagem.</p>
-            <p id="mode-extra" class="mode-extra">O brilho normal do macOS continua sob seu controle. Com HDR Protection ativado, o boost é limitado durante conteúdo HDR para ajudar a preservar seus detalhes.</p>
+            <p id="mode-extra" class="mode-extra">O brilho normal do macOS continua sob seu controle. Com o Video Detail Protection ativado, o LUM4 reduz temporariamente o boost durante a reprodução de vídeos e restaura o valor anterior ao terminar.</p>
             <div class="mode-note"><svg class="icon" id="mode-note-icon" aria-hidden="true"><use href="#i-sun" /></svg><span id="mode-note">Ajuste a intensidade. Encontre a sua luz.</span></div>
           </div>
         </div>
@@ -175,7 +175,7 @@
           <p class="plan-savings-basis" data-plan-savings-basis data-i18n="purchase.savingsBasis">Em relação a 3 licenças individuais.</p>
           <ul class="purchase-features">
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.manual">Boost XDR com ajuste manual</span></li>
-            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.hdr">HDR Protection para cuidar da imagem</span></li>
+            <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.hdr">Video Detail Protection para preservar detalhes em vídeos</span></li>
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.native">App nativo na barra de menus</span></li>
           </ul>
           <p class="purchase-roadmap"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span data-i18n="purchase.roadmap">Modos Manual, Automático e Inteligente com IA local.</span></p>
