@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0c0d0f" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; form-action 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://lum-4-license-server.vercel.app" />
     <meta name="description" data-i18n-content="meta.description" content="LUM4 by ALLM4. Boost XDR nativo para macOS, com controle simples e IA local que aprende suas preferências. Para Macs Apple Silicon com tela XDR integrada." />
     <meta property="og:title" data-i18n-content="meta.title" content="LUM4 — Mais luz para o que importa." />
     <meta property="og:description" data-i18n-content="meta.socialDescription" content="Descubra uma nova luz no seu Mac. Um app nativo e simples para aproveitar o brilho da sua tela XDR." />
@@ -172,13 +173,18 @@
           </fieldset>
           <p class="price-caption plan-savings-copy" data-plan-savings-copy>Pacote de 3 Macs: economize R$ 14,98.</p>
           <p class="plan-savings-basis" data-plan-savings-basis data-i18n="purchase.savingsBasis">Em relação a 3 licenças individuais.</p>
+          <div class="site-coupon" data-site-coupon hidden>
+            <span data-i18n="purchase.couponAvailable">Cupom disponível</span>
+            <strong data-site-coupon-code></strong>
+            <span data-site-coupon-discount></span>
+          </div>
           <ul class="purchase-features">
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.manual">Boost XDR com ajuste manual</span></li>
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.hdr">HDR Protection para cuidar da imagem</span></li>
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.native">App nativo na barra de menus</span></li>
           </ul>
           <p class="purchase-roadmap"><svg class="icon" aria-hidden="true"><use href="#i-spark" /></svg><span data-i18n="purchase.roadmap">Modos Manual, Automático e Inteligente com IA local.</span></p>
-          <a class="button button-primary purchase-button" href="/api/checkout" data-checkout><span data-i18n="actions.buyApp">Comprar LUM4</span><svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>
+          <button class="button button-primary purchase-button" type="button" data-checkout><span data-i18n="actions.buyApp">Comprar LUM4</span><svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></button>
           <p class="purchase-footnote" data-checkout-note>Licença para macOS.</p>
         </div>
       </section>
@@ -193,6 +199,47 @@
       <h2 id="dialog-title">Download indisponível nesta página.</h2>
       <p id="dialog-description">O link de download ainda não está disponível nesta página. O LUM4 funciona no macOS 26 ou mais recente, em MacBook Pro com tela XDR compatível.</p>
       <button type="button" class="button button-primary" id="dialog-done" data-i18n="dialog.done">Entendi</button>
+    </dialog>
+
+    <dialog id="checkout-dialog" class="checkout-dialog" aria-labelledby="checkout-title" aria-describedby="checkout-help">
+      <button id="checkout-close" class="dialog-close" type="button" aria-label="Fechar" data-i18n-aria-label="dialog.close"><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></button>
+      <img src="/assets/lum4-mark.png" width="56" height="56" alt="" />
+      <p class="eyebrow">LUM4 by ALLM4</p>
+      <h2 id="checkout-title" data-i18n="checkout.title">Comprar LUM4</h2>
+      <p id="checkout-help" data-i18n="checkout.help">Informe seu e-mail para gerar o Pix. Após a confirmação do pagamento, sua licença será enviada automaticamente.</p>
+      <form id="checkout-form" class="checkout-form" novalidate>
+        <div class="checkout-summary">
+          <span data-i18n="checkout.selectedPlan">Plano selecionado</span>
+          <strong data-checkout-plan>1 Mac</strong>
+          <span data-checkout-price>R$ 14,99</span>
+        </div>
+        <label class="checkout-field">
+          <span data-i18n="checkout.email">Seu e-mail</span>
+          <input id="checkout-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="voce@exemplo.com" data-i18n-placeholder="checkout.emailPlaceholder" />
+        </label>
+        <label class="checkout-field">
+          <span data-i18n="checkout.coupon">Cupom de desconto</span>
+          <input id="checkout-coupon" name="coupon" type="text" autocomplete="off" maxlength="64" placeholder="Opcional" data-i18n-placeholder="checkout.couponPlaceholder" />
+        </label>
+        <p id="checkout-error" class="checkout-error" role="alert" hidden></p>
+        <button id="checkout-submit" class="button button-primary" type="submit">
+          <span data-i18n="checkout.generatePix">Gerar Pix</span>
+          <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg>
+        </button>
+      </form>
+      <section id="pix-result" class="pix-result" hidden aria-live="polite">
+        <div class="pix-result-heading">
+          <span data-i18n="checkout.pixReady">Pix gerado</span>
+          <strong data-pix-amount></strong>
+        </div>
+        <img id="pix-qr" class="pix-qr" alt="QR Code Pix" data-i18n-alt="checkout.qrAlt" hidden />
+        <p class="pix-instruction" data-i18n="checkout.pixInstruction">Escaneie o QR Code ou copie o código Pix abaixo.</p>
+        <div class="pix-code-row">
+          <code id="pix-code"></code>
+          <button id="pix-copy" type="button" data-i18n="checkout.copyPix">Copiar Pix</button>
+        </div>
+        <p id="pix-status" class="pix-status" data-i18n="checkout.waitingPayment">Aguardando confirmação do pagamento…</p>
+      </section>
     </dialog>
     <noscript><p class="noscript-note" data-i18n="noscript">Ative o JavaScript para experimentar a prévia e consultar a disponibilidade do download e da compra.</p></noscript>
   </body>
