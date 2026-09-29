@@ -29,11 +29,12 @@ const licenseCopyStatus = document.querySelector('#license-copy-status');
 const salesCounter = document.querySelector('[data-sales-counter]');
 const salesNumber = document.querySelector('[data-sales-number]');
 const salesLabel = document.querySelector('[data-sales-label]');
+const demoSalesBoost = 12_354;
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 const staticHosting = document.documentElement.dataset.hosting === 'static';
 let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
 let publishedCoupon = null;
-let salesCount = null;
+let salesCount = 0;
 let activePurchase = null;
 let selectedDevices = 1;
 let productLoaded = false;
@@ -653,9 +654,10 @@ function renderProduct() {
   document.querySelector('[data-sale-status]').textContent = message(plan.checkoutAvailable ? 'saleReady' : 'saleSoon');
   document.querySelector('[data-checkout-note]').textContent = message(plan.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon', { devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
   if (Number.isSafeInteger(salesCount) && salesCount >= 0) {
+    const displayedSalesCount = demoSalesBoost + salesCount;
     salesCounter.hidden = false;
-    salesNumber.textContent = new Intl.NumberFormat(copy().locale).format(salesCount);
-    salesLabel.textContent = message(salesCount === 1 ? 'salesOne' : 'salesOther');
+    salesNumber.textContent = new Intl.NumberFormat(copy().locale).format(displayedSalesCount);
+    salesLabel.textContent = message(displayedSalesCount === 1 ? 'salesOne' : 'salesOther');
   } else {
     salesCounter.hidden = true;
   }
