@@ -4,8 +4,21 @@ const toggle = document.querySelector('#boost-switch');
 const image = document.querySelector('#preview-image');
 const stateLabel = document.querySelector('#boost-state');
 const dialog = document.querySelector('#availability-dialog');
+const checkoutDialog = document.querySelector('#checkout-dialog');
+const checkoutForm = document.querySelector('#checkout-form');
+const checkoutEmail = document.querySelector('#checkout-email');
+const checkoutCoupon = document.querySelector('#checkout-coupon');
+const checkoutError = document.querySelector('#checkout-error');
+const checkoutSubmit = document.querySelector('#checkout-submit');
+const pixResult = document.querySelector('#pix-result');
+const pixQr = document.querySelector('#pix-qr');
+const pixCode = document.querySelector('#pix-code');
+const pixStatus = document.querySelector('#pix-status');
+const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 const staticHosting = document.documentElement.dataset.hosting === 'static';
-let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ devices: 1, price: 14.99, checkoutAvailable: false }, { devices: 2, price: 23.99, checkoutAvailable: false }, { devices: 3, price: 29.99, checkoutAvailable: false }] };
+let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
+let publishedCoupon = null;
+let activePurchase = null;
 let selectedDevices = 1;
 let productLoaded = false;
 let productUnavailable = false;
@@ -31,7 +44,8 @@ function translateStatic() {
   const bindings = [
     ['data-i18n', null], ['data-i18n-html', 'html'],
     ['data-i18n-aria-label', 'aria-label'], ['data-i18n-aria-roledescription', 'aria-roledescription'],
-    ['data-i18n-content', 'content']
+    ['data-i18n-content', 'content'], ['data-i18n-placeholder', 'placeholder'],
+    ['data-i18n-alt', 'alt']
   ];
   bindings.forEach(([binding, attribute]) => {
     document.querySelectorAll(`[${binding}]`).forEach(element => {
