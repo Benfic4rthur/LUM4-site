@@ -298,3 +298,5 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
   .license-key-row button{min-height:40px}
   .license-copy-status{text-align:left}
 }
+
+.checkout-email-note{display:block;margin-top:2px;color:#81858d;font-size:.6875rem;line-height:1.45}
