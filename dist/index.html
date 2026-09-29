@@ -30,9 +30,9 @@
     <link rel="icon" type="image/png" sizes="64x64" href="/assets/lum4-favicon-64-v3.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v3.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=checkout-emailnote6" />
+    <link rel="stylesheet" href="/styles.css?v=checkout-plans7" />
     <script src="/locales.js?v=checkout-emailnote6" defer></script>
-    <script src="/app.js?v=checkout-license5" defer></script>
+    <script src="/app.js?v=checkout-plans7" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
@@ -207,7 +207,11 @@
       <form id="checkout-form" class="checkout-form" novalidate>
         <div class="checkout-summary">
           <span data-i18n="checkout.selectedPlan">Plano selecionado</span>
-          <strong data-checkout-plan>1 Mac</strong>
+          <div class="checkout-plan-switch" role="group" aria-label="Escolha o plano" data-i18n-aria-label="purchase.choosePlan">
+            <button type="button" data-checkout-plan-option="1" aria-pressed="true" data-i18n="purchase.planOne">1 Mac</button>
+            <button type="button" data-checkout-plan-option="2" aria-pressed="false" data-i18n="purchase.planTwo">2 Macs</button>
+            <button type="button" data-checkout-plan-option="3" aria-pressed="false" data-i18n="purchase.planThree">3 Macs</button>
+          </div>
           <div class="checkout-price-box">
             <span data-checkout-original-price hidden></span>
             <span data-checkout-discount-badge hidden></span>
