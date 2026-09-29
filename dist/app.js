@@ -219,6 +219,119 @@ function clearPurchasePoll() {
   purchasePollTimer = null;
 }
 
+async function animateCheckoutElements(elements, keyframes, options) {
+  if (motionPreference.matches) return;
+
+  const animations = elements
+    .filter(element => element && !element.hidden)
+    .map(element => element.animate(keyframes, options));
+
+  await Promise.allSettled(
+    animations.map(animation => animation.finished)
+  );
+}
+
+async function transitionToPixResult() {
+  const outgoing = [
+    checkoutForm.querySelector('.checkout-field'),
+    checkoutPublicCoupon,
+    checkoutSubmit
+  ];
+
+  await animateCheckoutElements(
+    outgoing,
+    [
+      { opacity: 1, transform: 'translateY(0)' },
+      { opacity: 0, transform: 'translateY(-16px)' }
+    ],
+    {
+      duration: 220,
+      easing: 'cubic-bezier(.4,0,.2,1)',
+      fill: 'forwards'
+    }
+  );
+
+  checkoutDialog.classList.add('pix-created');
+  pixPurchaseSummary.hidden = false;
+  pixResult.hidden = false;
+
+  await animateCheckoutElements(
+    [pixPurchaseSummary, pixResult],
+    [
+      { opacity: 0, transform: 'translateY(16px)' },
+      { opacity: 1, transform: 'translateY(0)' }
+    ],
+    {
+      duration: 290,
+      easing: 'cubic-bezier(.2,.7,.2,1)',
+      fill: 'both'
+    }
+  );
+
+  await animateCheckoutElements(
+    [pixQr],
+    [
+      { opacity: 0, transform: 'scale(.96)' },
+      { opacity: 1, transform: 'scale(1)' }
+    ],
+    {
+      duration: 240,
+      easing: 'cubic-bezier(.2,.7,.2,1)',
+      fill: 'both'
+    }
+  );
+}
+
+async function transitionToLicenseResult(licenseValue) {
+  if (
+    checkoutDialog.classList.contains('payment-confirmed') ||
+    checkoutDialog.classList.contains('payment-transitioning')
+  ) {
+    return;
+  }
+
+  checkoutDialog.classList.add('payment-transitioning');
+
+  const outgoing = [
+    document.querySelector('.pix-result-heading'),
+    pixQr,
+    document.querySelector('.pix-instruction'),
+    document.querySelector('.pix-code-row')
+  ];
+
+  await animateCheckoutElements(
+    outgoing,
+    [
+      { opacity: 1, transform: 'translateY(0) scale(1)' },
+      { opacity: 0, transform: 'translateY(-14px) scale(.97)' }
+    ],
+    {
+      duration: 240,
+      easing: 'cubic-bezier(.4,0,.2,1)',
+      fill: 'forwards'
+    }
+  );
+
+  pixStatus.textContent = message('checkoutPaymentConfirmed');
+  licenseKey.textContent = licenseValue;
+  licenseResult.hidden = false;
+  checkoutDialog.classList.add('payment-confirmed');
+  checkoutDialog.classList.remove('payment-transitioning');
+
+  await animateCheckoutElements(
+    [pixStatus, licenseResult],
+    [
+      { opacity: 0, transform: 'translateY(14px)' },
+      { opacity: 1, transform: 'translateY(0)' }
+    ],
+    {
+      duration: 320,
+      easing: 'cubic-bezier(.2,.7,.2,1)',
+      fill: 'both'
+    }
+  );
+}
+
 function checkoutErrorMessage(error, fallback = 'checkoutUnavailable') {
   if (error && typeof error === 'object') {
     const details = error.error;
@@ -403,10 +516,7 @@ async function pollPurchase(purchaseId) {
     if (activePurchase !== purchaseId) return;
 
     if (data.licensed === true && typeof data.licenseKey === 'string' && data.licenseKey.trim()) {
-      pixStatus.textContent = message('checkoutPaymentConfirmed');
-      licenseKey.textContent = data.licenseKey.trim();
-      licenseResult.hidden = false;
-      checkoutDialog.classList.add('payment-confirmed');
+      await transitionToLicenseResult(data.licenseKey.trim());
       return;
     }
 
@@ -482,9 +592,6 @@ checkoutForm.addEventListener('submit', async event => {
       pixCouponSummary.hidden = true;
       pixCouponSummary.textContent = '';
     }
-    pixPurchaseSummary.hidden = false;
-    checkoutDialog.classList.add('pix-created');
-    pixResult.hidden = false;
     document.querySelector('[data-pix-amount]').textContent = formattedPrice(Number(data.amount));
 
     if (qrBase64) {
@@ -497,6 +604,7 @@ checkoutForm.addEventListener('submit', async event => {
     pixStatus.textContent = message('checkoutCreated', {
       amount: formattedPrice(Number(data.amount))
     });
+    await transitionToPixResult();
     void pollPurchase(data.purchaseId);
   } catch (error) {
     checkoutError.textContent = error instanceof Error
