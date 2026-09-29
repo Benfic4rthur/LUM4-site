@@ -425,7 +425,16 @@ function resetCheckoutResult() {
   pixEmailSummary.textContent = '';
   pixCouponSummary.hidden = true;
   pixCouponSummary.textContent = '';
-  checkoutDialog.classList.remove('pix-created', 'payment-confirmed');
+  checkoutDialog
+    .querySelectorAll('*')
+    .forEach(element =>
+      element.getAnimations().forEach(animation => animation.cancel())
+    );
+  checkoutDialog.classList.remove(
+    'pix-created',
+    'payment-confirmed',
+    'payment-transitioning'
+  );
   licenseResult.hidden = true;
   licenseKey.textContent = '';
   licenseCopyStatus.hidden = true;
