@@ -7,12 +7,12 @@ const dialog = document.querySelector('#availability-dialog');
 const checkoutDialog = document.querySelector('#checkout-dialog');
 const checkoutForm = document.querySelector('#checkout-form');
 const checkoutEmail = document.querySelector('#checkout-email');
-const checkoutCoupon = document.querySelector('#checkout-coupon');
 const checkoutUsePublicCoupon = document.querySelector('#checkout-use-public-coupon');
 const checkoutPublicCoupon = document.querySelector('[data-checkout-public-coupon]');
 const checkoutPublicCouponCode = document.querySelector('[data-checkout-public-coupon-code]');
 const checkoutPublicCouponDiscount = document.querySelector('[data-checkout-public-coupon-discount]');
 const checkoutOriginalPrice = document.querySelector('[data-checkout-original-price]');
+const checkoutDiscountBadge = document.querySelector('[data-checkout-discount-badge]');
 const checkoutPrice = document.querySelector('[data-checkout-price]');
 const checkoutError = document.querySelector('#checkout-error');
 const checkoutSubmit = document.querySelector('#checkout-submit');
@@ -263,7 +263,14 @@ function renderCheckoutSummary(animate = false) {
 
   checkoutOriginalPrice.hidden = !usePublicCoupon;
   checkoutOriginalPrice.textContent = formattedPrice(plan.price);
+  checkoutDiscountBadge.hidden = !usePublicCoupon;
+  checkoutDiscountBadge.textContent = usePublicCoupon
+    ? `−${publishedCoupon.discountPercent}%`
+    : '';
   checkoutPrice.dataset.numericPrice = String(nextPrice);
+
+  checkoutPrice.classList.toggle('discounted', usePublicCoupon);
+  checkoutDiscountBadge.classList.toggle('is-visible', usePublicCoupon);
 
   if (animate && Math.abs(currentPrice - nextPrice) > 0.0001) {
     animateCheckoutPrice(currentPrice, nextPrice);
@@ -273,21 +280,11 @@ function renderCheckoutSummary(animate = false) {
 }
 
 function renderPublishedCoupon() {
-  const box = document.querySelector('[data-site-coupon]');
-
   if (!publishedCoupon) {
-    box.hidden = true;
     checkoutPublicCoupon.hidden = true;
     checkoutUsePublicCoupon.checked = false;
-    checkoutCoupon.disabled = false;
     return;
   }
-
-  box.hidden = false;
-  document.querySelector('[data-site-coupon-code]').textContent = publishedCoupon.code;
-  document.querySelector('[data-site-coupon-discount]').textContent = message('checkoutCouponDiscount', {
-    discount: publishedCoupon.discountPercent
-  });
 
   checkoutPublicCoupon.hidden = false;
   checkoutPublicCouponCode.textContent = publishedCoupon.code;
@@ -313,8 +310,6 @@ function resetCheckoutResult() {
 function openCheckout() {
   resetCheckoutResult();
   checkoutUsePublicCoupon.checked = false;
-  checkoutCoupon.disabled = false;
-  checkoutCoupon.value = '';
   renderPublishedCoupon();
   renderCheckoutSummary();
   checkoutDialog.showModal();
@@ -327,8 +322,6 @@ function closeCheckout() {
 }
 
 checkoutUsePublicCoupon.addEventListener('change', () => {
-  checkoutCoupon.disabled = checkoutUsePublicCoupon.checked;
-  if (checkoutUsePublicCoupon.checked) checkoutCoupon.value = '';
   renderCheckoutSummary(true);
 });
 
@@ -393,7 +386,7 @@ checkoutForm.addEventListener('submit', async event => {
   const plan = selectedPlan();
   const couponCode = checkoutUsePublicCoupon.checked && publishedCoupon
     ? publishedCoupon.code
-    : checkoutCoupon.value.trim();
+    : '';
   checkoutSubmit.disabled = true;
   checkoutSubmit.querySelector('span').textContent = message('checkoutCreating');
 

@@ -173,11 +173,6 @@
           </fieldset>
           <p class="price-caption plan-savings-copy" data-plan-savings-copy>Pacote de 3 Macs: economize R$ 14,98.</p>
           <p class="plan-savings-basis" data-plan-savings-basis data-i18n="purchase.savingsBasis">Em relação a 3 licenças individuais.</p>
-          <div class="site-coupon" data-site-coupon hidden>
-            <span data-i18n="purchase.couponAvailable">Cupom disponível</span>
-            <strong data-site-coupon-code></strong>
-            <span data-site-coupon-discount></span>
-          </div>
           <ul class="purchase-features">
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.manual">Boost XDR com ajuste manual</span></li>
             <li><svg class="icon" aria-hidden="true"><use href="#i-check" /></svg><span data-i18n="purchase.hdr">HDR Protection para cuidar da imagem</span></li>
@@ -213,24 +208,23 @@
           <strong data-checkout-plan>1 Mac</strong>
           <div class="checkout-price-box">
             <span data-checkout-original-price hidden></span>
+            <span data-checkout-discount-badge hidden></span>
             <span data-checkout-price>R$ 14,99</span>
           </div>
         </div>
-        <label class="checkout-public-coupon" data-checkout-public-coupon hidden>
-          <input id="checkout-use-public-coupon" type="checkbox" />
-          <span class="checkout-public-coupon-copy">
-            <strong><span data-i18n="purchase.couponAvailable">Cupom disponível</span>: <span data-checkout-public-coupon-code></span></strong>
-            <small data-checkout-public-coupon-discount></small>
-          </span>
-          <span class="checkout-public-coupon-check" aria-hidden="true">✓</span>
-        </label>
         <label class="checkout-field">
           <span data-i18n="checkout.email">Seu e-mail</span>
           <input id="checkout-email" name="email" type="email" autocomplete="email" required maxlength="254" placeholder="voce@exemplo.com" data-i18n-placeholder="checkout.emailPlaceholder" />
         </label>
-        <label class="checkout-field">
-          <span data-i18n="checkout.coupon">Cupom de desconto</span>
-          <input id="checkout-coupon" name="coupon" type="text" autocomplete="off" maxlength="64" placeholder="Opcional" data-i18n-placeholder="checkout.couponPlaceholder" />
+        <label class="checkout-public-coupon" data-checkout-public-coupon hidden>
+          <span class="checkout-public-coupon-copy">
+            <strong><span data-i18n="purchase.couponAvailable">Cupom disponível</span>: <span data-checkout-public-coupon-code></span></strong>
+            <small data-checkout-public-coupon-discount></small>
+          </span>
+          <span class="checkout-public-coupon-control">
+            <input id="checkout-use-public-coupon" type="checkbox" />
+            <span class="checkout-public-coupon-check" aria-hidden="true">✓</span>
+          </span>
         </label>
         <p id="checkout-error" class="checkout-error" role="alert" hidden></p>
         <button id="checkout-submit" class="button button-primary" type="submit">

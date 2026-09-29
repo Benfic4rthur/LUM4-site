@@ -193,3 +193,20 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 .checkout-field input:disabled{opacity:.45;cursor:not-allowed}
 
 .site-coupon[hidden],.checkout-public-coupon[hidden],.pix-result[hidden],.checkout-error[hidden],.pix-code-row[hidden]{display:none!important}
+
+/* Published coupon choice inside checkout */
+.checkout-price-box{position:relative;display:flex;align-items:baseline;justify-content:flex-end;gap:7px;min-height:28px}
+.checkout-price-box [data-checkout-discount-badge]{display:inline-flex;align-items:center;min-height:22px;padding:2px 7px;border:1px solid #ffbd7460;border-radius:999px;background:#ffb66c12;color:#ffca91;font-size:.6875rem;font-weight:700;letter-spacing:.15px;transform:scale(.88);opacity:0;transition:opacity .18s ease,transform .28s cubic-bezier(.2,.7,.2,1)}
+.checkout-price-box [data-checkout-discount-badge].is-visible{opacity:1;transform:scale(1)}
+.checkout-price-box [data-checkout-price]{min-width:74px;text-align:right;transition:color .22s ease,text-shadow .22s ease;font-size:1rem}
+.checkout-price-box [data-checkout-price].discounted{color:#ffd8ab;text-shadow:0 0 18px #ffb66c22}
+.checkout-price-box [data-checkout-original-price]{color:#757982;font-size:.72rem;text-decoration:line-through}
+.checkout-public-coupon{grid-template-columns:1fr auto;gap:14px;margin:0;padding:14px 15px}
+.checkout-public-coupon-copy strong{display:block;color:#f2dfc9;font-size:.8125rem}
+.checkout-public-coupon-copy small{display:block;margin-top:3px;color:#d8ae80;font-size:.75rem}
+.checkout-public-coupon-control{position:relative;display:grid;place-items:center;width:30px;height:30px}
+.checkout-public-coupon-control input{position:absolute;inset:0;width:30px;height:30px;margin:0;opacity:0;cursor:pointer}
+.checkout-public-coupon-check{pointer-events:none;width:27px;height:27px}
+.checkout-public-coupon:has(input:checked) .checkout-public-coupon-check{transform:scale(1.05)}
+.site-coupon{display:none!important}
+@media(max-width:640px){.checkout-price-box{flex-wrap:wrap}.checkout-public-coupon{grid-template-columns:1fr auto}}
