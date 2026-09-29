@@ -8,6 +8,12 @@ const checkoutDialog = document.querySelector('#checkout-dialog');
 const checkoutForm = document.querySelector('#checkout-form');
 const checkoutEmail = document.querySelector('#checkout-email');
 const checkoutCoupon = document.querySelector('#checkout-coupon');
+const checkoutUsePublicCoupon = document.querySelector('#checkout-use-public-coupon');
+const checkoutPublicCoupon = document.querySelector('[data-checkout-public-coupon]');
+const checkoutPublicCouponCode = document.querySelector('[data-checkout-public-coupon-code]');
+const checkoutPublicCouponDiscount = document.querySelector('[data-checkout-public-coupon-discount]');
+const checkoutOriginalPrice = document.querySelector('[data-checkout-original-price]');
+const checkoutPrice = document.querySelector('[data-checkout-price]');
 const checkoutError = document.querySelector('#checkout-error');
 const checkoutSubmit = document.querySelector('#checkout-submit');
 const pixResult = document.querySelector('#pix-result');
@@ -217,24 +223,75 @@ function checkoutErrorMessage(error, fallback = 'checkoutUnavailable') {
   return message(fallback);
 }
 
-function renderCheckoutSummary() {
+function couponPrice(plan, enabled = checkoutUsePublicCoupon.checked) {
+  if (!enabled || !publishedCoupon) return plan.price;
+  const cents = Math.round(plan.price * 100);
+  const discounted = cents - Math.round(cents * publishedCoupon.discountPercent / 100);
+  return Math.max(1, discounted) / 100;
+}
+
+function animateCheckoutPrice(from, to) {
+  const duration = motionPreference.matches ? 0 : 720;
+  const startedAt = performance.now();
+
+  function frame(now) {
+    const progress = duration === 0 ? 1 : Math.min(1, (now - startedAt) / duration);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const value = from + (to - from) * eased;
+    checkoutPrice.textContent = formattedPrice(value);
+    if (progress < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function renderCheckoutSummary(animate = false) {
   const plan = selectedPlan();
   document.querySelector('[data-checkout-plan]').textContent = message('checkoutPlanLabel', {
     devices: plan.devices,
     deviceLabel: message(plan.devices === 1 ? 'deviceOne' : 'deviceOther')
   });
-  document.querySelector('[data-checkout-price]').textContent = formattedPrice(plan.price);
+
+  const usePublicCoupon = Boolean(
+    publishedCoupon &&
+    checkoutUsePublicCoupon.checked
+  );
+  const nextPrice = couponPrice(plan, usePublicCoupon);
+  const currentPrice = Number(
+    checkoutPrice.dataset.numericPrice ?? plan.price
+  );
+
+  checkoutOriginalPrice.hidden = !usePublicCoupon;
+  checkoutOriginalPrice.textContent = formattedPrice(plan.price);
+  checkoutPrice.dataset.numericPrice = String(nextPrice);
+
+  if (animate && Math.abs(currentPrice - nextPrice) > 0.0001) {
+    animateCheckoutPrice(currentPrice, nextPrice);
+  } else {
+    checkoutPrice.textContent = formattedPrice(nextPrice);
+  }
 }
 
 function renderPublishedCoupon() {
   const box = document.querySelector('[data-site-coupon]');
+
   if (!publishedCoupon) {
     box.hidden = true;
+    checkoutPublicCoupon.hidden = true;
+    checkoutUsePublicCoupon.checked = false;
+    checkoutCoupon.disabled = false;
     return;
   }
+
   box.hidden = false;
   document.querySelector('[data-site-coupon-code]').textContent = publishedCoupon.code;
   document.querySelector('[data-site-coupon-discount]').textContent = message('checkoutCouponDiscount', {
+    discount: publishedCoupon.discountPercent
+  });
+
+  checkoutPublicCoupon.hidden = false;
+  checkoutPublicCouponCode.textContent = publishedCoupon.code;
+  checkoutPublicCouponDiscount.textContent = message('checkoutCouponDiscount', {
     discount: publishedCoupon.discountPercent
   });
 }
@@ -255,8 +312,11 @@ function resetCheckoutResult() {
 
 function openCheckout() {
   resetCheckoutResult();
+  checkoutUsePublicCoupon.checked = false;
+  checkoutCoupon.disabled = false;
+  checkoutCoupon.value = '';
+  renderPublishedCoupon();
   renderCheckoutSummary();
-  if (publishedCoupon) checkoutCoupon.value = publishedCoupon.code;
   checkoutDialog.showModal();
   window.setTimeout(() => checkoutEmail.focus(), 0);
 }
@@ -265,6 +325,12 @@ function closeCheckout() {
   clearPurchasePoll();
   checkoutDialog.close();
 }
+
+checkoutUsePublicCoupon.addEventListener('change', () => {
+  checkoutCoupon.disabled = checkoutUsePublicCoupon.checked;
+  if (checkoutUsePublicCoupon.checked) checkoutCoupon.value = '';
+  renderCheckoutSummary(true);
+});
 
 document.querySelector('#checkout-close').addEventListener('click', closeCheckout);
 checkoutDialog.addEventListener('click', event => {
@@ -325,7 +391,9 @@ checkoutForm.addEventListener('submit', async event => {
   }
 
   const plan = selectedPlan();
-  const couponCode = checkoutCoupon.value.trim();
+  const couponCode = checkoutUsePublicCoupon.checked && publishedCoupon
+    ? publishedCoupon.code
+    : checkoutCoupon.value.trim();
   checkoutSubmit.disabled = true;
   checkoutSubmit.querySelector('span').textContent = message('checkoutCreating');
 
@@ -362,7 +430,7 @@ checkoutForm.addEventListener('submit', async event => {
     document.querySelector('[data-pix-amount]').textContent = formattedPrice(Number(data.amount));
 
     if (qrBase64) {
-      pixQr.src = qrBase64.startsWith('data:') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+      pixQr.src = qrBase64.startsWith('data:') ? qrBase64 : `data:image/jpeg;base64,${qrBase64}`;
       pixQr.hidden = false;
     }
 
