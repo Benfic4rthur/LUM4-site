@@ -26,10 +26,14 @@ const pixStatus = document.querySelector('#pix-status');
 const licenseResult = document.querySelector('[data-license-result]');
 const licenseKey = document.querySelector('#license-key');
 const licenseCopyStatus = document.querySelector('#license-copy-status');
+const salesCounter = document.querySelector('[data-sales-counter]');
+const salesNumber = document.querySelector('[data-sales-number]');
+const salesLabel = document.querySelector('[data-sales-label]');
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 const staticHosting = document.documentElement.dataset.hosting === 'static';
 let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
 let publishedCoupon = null;
+let salesCount = null;
 let activePurchase = null;
 let selectedDevices = 1;
 let productLoaded = false;
@@ -526,6 +530,7 @@ async function pollPurchase(purchaseId) {
 
     if (data.licensed === true && typeof data.licenseKey === 'string' && data.licenseKey.trim()) {
       await transitionToLicenseResult(data.licenseKey.trim());
+      void refreshProduct();
       return;
     }
 
@@ -647,6 +652,13 @@ function renderProduct() {
   document.querySelector('[data-release-status]').textContent = message(productUnavailable ? 'downloadUnavailable' : product.downloadAvailable ? 'downloadReady' : 'downloadSoon');
   document.querySelector('[data-sale-status]').textContent = message(plan.checkoutAvailable ? 'saleReady' : 'saleSoon');
   document.querySelector('[data-checkout-note]').textContent = message(plan.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon', { devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
+  if (Number.isSafeInteger(salesCount) && salesCount >= 0) {
+    salesCounter.hidden = false;
+    salesNumber.textContent = new Intl.NumberFormat(copy().locale).format(salesCount);
+    salesLabel.textContent = message(salesCount === 1 ? 'salesOne' : 'salesOther');
+  } else {
+    salesCounter.hidden = true;
+  }
   renderPublishedCoupon();
   if (checkoutDialog.open) renderCheckoutSummary();
   if (dialog.open) updateDialog();
@@ -698,7 +710,7 @@ async function refreshProduct() {
   }
 
   try {
-    const [plansResponse, couponsResponse] = await Promise.all([
+    const [plansResponse, couponsResponse, statsResponse] = await Promise.all([
       fetch(`${licenseApiBase}/v1/plans`, {
         signal: AbortSignal.timeout(8000),
         cache: 'no-store',
@@ -712,7 +724,14 @@ async function refreshProduct() {
         credentials: 'omit',
         referrerPolicy: 'no-referrer',
         headers: { Accept: 'application/json' }
-      })
+      }),
+      fetch(`${licenseApiBase}/v1/stats`, {
+        signal: AbortSignal.timeout(8000),
+        cache: 'no-store',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        headers: { Accept: 'application/json' }
+      }).catch(() => null)
     ]);
 
     if (!plansResponse.ok) throw new Error('Plans unavailable');
@@ -749,6 +768,17 @@ async function refreshProduct() {
       const couponData = await couponsResponse.json();
       if (Array.isArray(couponData.coupons)) {
         nextCoupon = couponData.coupons.find(validPublicCoupon) ?? null;
+      }
+    }
+
+    if (statsResponse?.ok) {
+      const statsData = await statsResponse.json().catch(() => null);
+      if (
+        statsData &&
+        Number.isSafeInteger(statsData.salesCount) &&
+        statsData.salesCount >= 0
+      ) {
+        salesCount = statsData.salesCount;
       }
     }
 
