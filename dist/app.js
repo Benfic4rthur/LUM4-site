@@ -17,6 +17,9 @@ const checkoutPrice = document.querySelector('[data-checkout-price]');
 const checkoutError = document.querySelector('#checkout-error');
 const checkoutSubmit = document.querySelector('#checkout-submit');
 const pixResult = document.querySelector('#pix-result');
+const pixPurchaseSummary = document.querySelector('[data-pix-purchase-summary]');
+const pixEmailSummary = document.querySelector('[data-pix-email-summary]');
+const pixCouponSummary = document.querySelector('[data-pix-coupon-summary]');
 const pixQr = document.querySelector('#pix-qr');
 const pixCode = document.querySelector('#pix-code');
 const pixStatus = document.querySelector('#pix-status');
@@ -299,6 +302,11 @@ function resetCheckoutResult() {
   checkoutError.hidden = true;
   checkoutError.textContent = '';
   pixResult.hidden = true;
+  pixPurchaseSummary.hidden = true;
+  pixEmailSummary.textContent = '';
+  pixCouponSummary.hidden = true;
+  pixCouponSummary.textContent = '';
+  checkoutDialog.classList.remove('pix-created');
   pixQr.hidden = true;
   pixQr.removeAttribute('src');
   pixCode.textContent = '';
@@ -419,6 +427,16 @@ checkoutForm.addEventListener('submit', async event => {
     if (!qrCode && !qrBase64) throw new Error('Pix unavailable');
 
     activePurchase = data.purchaseId;
+    pixEmailSummary.textContent = email;
+    if (couponCode && publishedCoupon) {
+      pixCouponSummary.hidden = false;
+      pixCouponSummary.textContent = `${publishedCoupon.code} · −${publishedCoupon.discountPercent}%`;
+    } else {
+      pixCouponSummary.hidden = true;
+      pixCouponSummary.textContent = '';
+    }
+    pixPurchaseSummary.hidden = false;
+    checkoutDialog.classList.add('pix-created');
     pixResult.hidden = false;
     document.querySelector('[data-pix-amount]').textContent = formattedPrice(Number(data.amount));
 
