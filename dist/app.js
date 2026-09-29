@@ -180,8 +180,12 @@ function showAvailability(type) {
 document.querySelectorAll('[data-download]').forEach(link => link.addEventListener('click', event => {
   if (!product.downloadAvailable) { event.preventDefault(); showAvailability('download'); }
 }));
-document.querySelectorAll('[data-checkout]').forEach(link => link.addEventListener('click', event => {
-  if (!selectedPlan().checkoutAvailable) { event.preventDefault(); showAvailability('checkout'); }
+document.querySelectorAll('[data-checkout]').forEach(button => button.addEventListener('click', () => {
+  if (!selectedPlan().checkoutAvailable) {
+    showAvailability('checkout');
+    return;
+  }
+  openCheckout();
 }));
 document.querySelectorAll('input[name="license-plan"]').forEach(input => input.addEventListener('change', () => {
   const devices = Number(input.value);
@@ -194,6 +198,189 @@ document.querySelector('#dialog-done').addEventListener('click', () => dialog.cl
 dialog.addEventListener('click', event => {
   const rect = dialog.getBoundingClientRect();
   if (event.target === dialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) dialog.close();
+});
+
+let purchasePollTimer = null;
+
+function clearPurchasePoll() {
+  if (purchasePollTimer) window.clearTimeout(purchasePollTimer);
+  purchasePollTimer = null;
+}
+
+function checkoutErrorMessage(error, fallback = 'checkoutUnavailable') {
+  if (error && typeof error === 'object') {
+    const details = error.error;
+    if (details && typeof details === 'object' && typeof details.message === 'string') {
+      return details.message;
+    }
+  }
+  return message(fallback);
+}
+
+function renderCheckoutSummary() {
+  const plan = selectedPlan();
+  document.querySelector('[data-checkout-plan]').textContent = message('checkoutPlanLabel', {
+    devices: plan.devices,
+    deviceLabel: message(plan.devices === 1 ? 'deviceOne' : 'deviceOther')
+  });
+  document.querySelector('[data-checkout-price]').textContent = formattedPrice(plan.price);
+}
+
+function renderPublishedCoupon() {
+  const box = document.querySelector('[data-site-coupon]');
+  if (!publishedCoupon) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  document.querySelector('[data-site-coupon-code]').textContent = publishedCoupon.code;
+  document.querySelector('[data-site-coupon-discount]').textContent = message('checkoutCouponDiscount', {
+    discount: publishedCoupon.discountPercent
+  });
+}
+
+function resetCheckoutResult() {
+  clearPurchasePoll();
+  activePurchase = null;
+  checkoutError.hidden = true;
+  checkoutError.textContent = '';
+  pixResult.hidden = true;
+  pixQr.hidden = true;
+  pixQr.removeAttribute('src');
+  pixCode.textContent = '';
+  pixStatus.textContent = message('checkoutPaymentPending');
+  checkoutSubmit.disabled = false;
+  checkoutSubmit.querySelector('span').textContent = copy().strings['checkout.generatePix'];
+}
+
+function openCheckout() {
+  resetCheckoutResult();
+  renderCheckoutSummary();
+  if (publishedCoupon) checkoutCoupon.value = publishedCoupon.code;
+  checkoutDialog.showModal();
+  window.setTimeout(() => checkoutEmail.focus(), 0);
+}
+
+function closeCheckout() {
+  clearPurchasePoll();
+  checkoutDialog.close();
+}
+
+document.querySelector('#checkout-close').addEventListener('click', closeCheckout);
+checkoutDialog.addEventListener('click', event => {
+  const rect = checkoutDialog.getBoundingClientRect();
+  if (event.target === checkoutDialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeCheckout();
+});
+document.querySelector('#pix-copy').addEventListener('click', async () => {
+  if (!pixCode.textContent) return;
+  try {
+    await navigator.clipboard.writeText(pixCode.textContent);
+    pixStatus.textContent = message('checkoutCopied');
+  } catch {
+    pixStatus.textContent = pixCode.textContent;
+  }
+});
+
+async function pollPurchase(purchaseId) {
+  clearPurchasePoll();
+  try {
+    const response = await fetch(`${licenseApiBase}/v1/checkout/${encodeURIComponent(purchaseId)}`, {
+      cache: 'no-store',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+      signal: AbortSignal.timeout(8000),
+      headers: { Accept: 'application/json' }
+    });
+    if (!response.ok) throw new Error('Status unavailable');
+    const data = await response.json();
+    if (activePurchase !== purchaseId) return;
+
+    if (data.licensed === true || (data.status === 'processed' && data.statusDetail === 'accredited')) {
+      pixStatus.textContent = message('checkoutPaymentConfirmed');
+      return;
+    }
+    if (['expired', 'canceled', 'cancelled', 'refunded', 'create_failed'].includes(data.status)) {
+      pixStatus.textContent = message('checkoutPaymentFailed');
+      return;
+    }
+  } catch {
+    if (activePurchase !== purchaseId) return;
+  }
+
+  if (activePurchase === purchaseId && checkoutDialog.open) {
+    purchasePollTimer = window.setTimeout(() => void pollPurchase(purchaseId), 3000);
+  }
+}
+
+checkoutForm.addEventListener('submit', async event => {
+  event.preventDefault();
+  resetCheckoutResult();
+
+  const email = checkoutEmail.value.trim();
+  if (!checkoutEmail.checkValidity() || !email) {
+    checkoutError.textContent = message('checkoutInvalidEmail');
+    checkoutError.hidden = false;
+    checkoutEmail.focus();
+    return;
+  }
+
+  const plan = selectedPlan();
+  const couponCode = checkoutCoupon.value.trim();
+  checkoutSubmit.disabled = true;
+  checkoutSubmit.querySelector('span').textContent = message('checkoutCreating');
+
+  try {
+    const response = await fetch(`${licenseApiBase}/v1/checkout/create`, {
+      method: 'POST',
+      cache: 'no-store',
+      credentials: 'omit',
+      referrerPolicy: 'no-referrer',
+      signal: AbortSignal.timeout(15000),
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        planId: plan.id,
+        ...(couponCode ? { couponCode } : {})
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw data;
+
+    if (typeof data.purchaseId !== 'string' || !data.pix || typeof data.pix !== 'object') {
+      throw new Error('Invalid checkout response');
+    }
+
+    const qrCode = typeof data.pix.qrCode === 'string' ? data.pix.qrCode : '';
+    const qrBase64 = typeof data.pix.qrCodeBase64 === 'string' ? data.pix.qrCodeBase64 : '';
+    if (!qrCode && !qrBase64) throw new Error('Pix unavailable');
+
+    activePurchase = data.purchaseId;
+    pixResult.hidden = false;
+    document.querySelector('[data-pix-amount]').textContent = formattedPrice(Number(data.amount));
+
+    if (qrBase64) {
+      pixQr.src = qrBase64.startsWith('data:') ? qrBase64 : `data:image/png;base64,${qrBase64}`;
+      pixQr.hidden = false;
+    }
+
+    pixCode.textContent = qrCode;
+    document.querySelector('.pix-code-row').hidden = !qrCode;
+    pixStatus.textContent = message('checkoutCreated', {
+      amount: formattedPrice(Number(data.amount))
+    });
+    void pollPurchase(data.purchaseId);
+  } catch (error) {
+    checkoutError.textContent = error instanceof Error
+      ? message('checkoutUnavailable')
+      : checkoutErrorMessage(error);
+    checkoutError.hidden = false;
+  } finally {
+    checkoutSubmit.disabled = false;
+    checkoutSubmit.querySelector('span').textContent = copy().strings['checkout.generatePix'];
+  }
 });
 
 function renderProduct() {
