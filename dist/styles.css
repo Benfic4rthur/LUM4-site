@@ -300,3 +300,17 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 }
 
 .checkout-email-note{display:block;margin-top:2px;color:#81858d;font-size:.6875rem;line-height:1.45}
+
+.checkout-plan-switch{display:flex;align-items:center;gap:6px;min-width:0}
+.checkout-plan-switch button{height:30px;padding:0 9px;border:1px solid #ffffff16;border-radius:8px;background:#ffffff03;color:#8f9299;font-size:.6875rem;white-space:nowrap;transition:background .18s,border-color .18s,color .18s,transform .18s}
+.checkout-plan-switch button:hover{background:#ffffff08;color:#e3e4e7}
+.checkout-plan-switch button.active,.checkout-plan-switch button[aria-pressed="true"]{border-color:#ffbd7460;background:#ffb66c10;color:#ffd3a2}
+.checkout-plan-switch button:active{transform:translateY(1px)}
+.checkout-dialog.pix-created .checkout-plan-switch{pointer-events:none}
+.checkout-dialog.pix-created .checkout-plan-switch button:not(.active){opacity:.35}
+@media(max-width:640px){
+  .checkout-summary{grid-template-columns:1fr}
+  .checkout-summary>span:first-child{grid-column:1}
+  .checkout-plan-switch{grid-column:1;flex-wrap:wrap}
+  .checkout-price-box{grid-column:1;justify-content:flex-start}
+}
