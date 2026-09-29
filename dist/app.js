@@ -253,9 +253,12 @@ function animateCheckoutPrice(from, to) {
 
 function renderCheckoutSummary(animate = false) {
   const plan = selectedPlan();
-  document.querySelector('[data-checkout-plan]').textContent = message('checkoutPlanLabel', {
-    devices: plan.devices,
-    deviceLabel: message(plan.devices === 1 ? 'deviceOne' : 'deviceOther')
+
+  document.querySelectorAll('[data-checkout-plan-option]').forEach(button => {
+    const devices = Number(button.dataset.checkoutPlanOption);
+    const active = devices === selectedDevices;
+    button.setAttribute('aria-pressed', String(active));
+    button.classList.toggle('active', active);
   });
 
   const usePublicCoupon = Boolean(
@@ -338,6 +341,24 @@ function closeCheckout() {
 
 checkoutUsePublicCoupon.addEventListener('change', () => {
   renderCheckoutSummary(true);
+});
+
+document.querySelectorAll('[data-checkout-plan-option]').forEach(button => {
+  button.addEventListener('click', () => {
+    if (checkoutDialog.classList.contains('pix-created')) return;
+
+    const devices = Number(button.dataset.checkoutPlanOption);
+    if (!product.plans.some(plan => plan.devices === devices)) return;
+
+    selectedDevices = devices;
+
+    document.querySelectorAll('input[name="license-plan"]').forEach(input => {
+      input.checked = Number(input.value) === devices;
+    });
+
+    renderProduct();
+    renderCheckoutSummary(true);
+  });
 });
 
 document.querySelector('#checkout-close').addEventListener('click', closeCheckout);
