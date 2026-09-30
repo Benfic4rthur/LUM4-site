@@ -34,6 +34,8 @@ Ao passar o mouse sobre um pacote, ele sobe 4 pixels e recebe uma borda e um bri
 
 O download é público e não exige login no GitHub. Sem links de pagamento configurados, a compra informa indisponibilidade. O preço permanece em reais nos três idiomas; alterar `currency` permite ajustar a moeda, sem conversão automática.
 
+Ao iniciar um download, o site expande as instruções de primeira abertura logo abaixo do botão, sem interromper o link direto. O usuário também pode abrir o aviso antes de baixar. Sem JavaScript, as instruções ficam expandidas. O texto informa que a versão atual ainda não foi autenticada pela Apple e orienta a autorização em Privacidade e Segurança, com referência ao suporte da Apple. A alternativa no Terminal mostra o comando fornecido pelo responsável pelo app, restrito a `/Applications/LUM4.app`, com opção de copiar; o site não executa o comando. O aviso e as instruções estão disponíveis em português, inglês e espanhol.
+
 O contador do site público será obtido dos downloads do repositório de releases do LUM4. Essa integração fica para depois, conforme solicitado. Até lá, `product.json` usa `downloads: null`, e a versão publicada não apresenta um total de downloads nem faz consultas à API de releases.
 
 A prévia local mantém o mecanismo anterior em `data/downloads.json`, que registra downloads iniciados pela rota local quando há um instalador configurado. Esse arquivo não é enviado ao GitHub Pages e não é a origem do futuro contador público.

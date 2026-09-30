@@ -79,9 +79,34 @@ function translateStatic() {
   document.querySelectorAll('[data-language]').forEach(button => {
     button.setAttribute('aria-pressed', String(button.dataset.language === language));
   });
+  document.querySelector('[data-apple-install-help]').href = {
+    pt: 'https://support.apple.com/pt-br/102445',
+    en: 'https://support.apple.com/en-us/102445',
+    es: 'https://support.apple.com/es-es/102445'
+  }[language];
 }
 translateStatic();
 const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+const downloadHelp = document.querySelector('#download-help');
+const installCopyButton = document.querySelector('#copy-install-command');
+const installCopyStatus = document.querySelector('#install-copy-status');
+// The instructions remain expanded when JavaScript is unavailable.
+downloadHelp.open = false;
+installCopyButton.hidden = false;
+document.querySelectorAll('[data-download]').forEach(link => {
+  link.addEventListener('click', () => { downloadHelp.open = true; });
+});
+installCopyButton.addEventListener('click', async () => {
+  let key = 'downloadHelp.copySuccess';
+  try {
+    await navigator.clipboard.writeText(document.querySelector('#download-help-command').textContent.trim());
+  } catch {
+    key = 'downloadHelp.copyError';
+  }
+  installCopyStatus.dataset.i18n = key;
+  installCopyStatus.textContent = copy().strings[key];
+  installCopyStatus.hidden = false;
+});
 const heroLight = document.querySelector('#hero-title > span');
 if (heroLight && !motionPreference.matches) {
   heroLight.classList.add('luminosity-pass');

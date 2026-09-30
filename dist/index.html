@@ -33,9 +33,9 @@
     <link rel="icon" type="image/png" sizes="256x256" href="/assets/lum4-favicon-256-v4.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v4.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=turbo-boost1" />
-    <script src="/locales.js?v=permanent-download1" defer></script>
-    <script src="/app.js?v=permanent-download1" defer></script>
+    <link rel="stylesheet" href="/styles.css?v=first-launch-help1" />
+    <script src="/locales.js?v=first-launch-help1" defer></script>
+    <script src="/app.js?v=first-launch-help1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
@@ -82,6 +82,26 @@
             </a>
             <a class="button button-subtle" href="#comprar"><span data-i18n="actions.buy">Comprar</span></a>
           </div>
+          <details class="download-help" id="download-help" open>
+            <summary><svg class="icon" aria-hidden="true"><use href="#i-shield" /></svg><span data-i18n="downloadHelp.summary">Primeira abertura no Mac</span></summary>
+            <div class="download-help-body">
+              <p data-i18n="downloadHelp.notice">A versão atual do LUM4 ainda não foi autenticada pela Apple. O macOS pode solicitar autorização na primeira abertura.</p>
+              <ol>
+                <li data-i18n-html="downloadHelp.stepInstall">Depois de instalar em <strong>Aplicativos</strong>, tente abrir o LUM4.</li>
+                <li data-i18n-html="downloadHelp.stepSettings">Se aparecer um aviso de desenvolvedor não identificado ou de app não autenticado, acesse <strong>Ajustes do Sistema → Privacidade e Segurança</strong>.</li>
+                <li data-i18n-html="downloadHelp.stepOpen">Clique em <strong>Abrir Mesmo Assim</strong> e confirme a abertura.</li>
+              </ol>
+              <a class="download-apple-help" data-apple-install-help href="https://support.apple.com/pt-br/102445" target="_blank" rel="noopener noreferrer" data-i18n="downloadHelp.appleHelp">Orientações da Apple</a>
+              <div class="download-terminal-help">
+                <h3 data-i18n="downloadHelp.terminalTitle">Se o LUM4 ainda não abrir</h3>
+                <p data-i18n="downloadHelp.terminalDescription">Abra o Terminal e execute este comando depois de instalar o LUM4 em Aplicativos:</p>
+                <pre class="install-command"><code id="download-help-command">xattr -dr com.apple.quarantine "/Applications/LUM4.app" &amp;&amp; open "/Applications/LUM4.app"</code></pre>
+                <button class="install-copy-button" id="copy-install-command" type="button" hidden data-i18n="downloadHelp.copyCommand">Copiar comando</button>
+                <p class="install-copy-status" id="install-copy-status" aria-live="polite" hidden></p>
+                <p class="install-command-note" data-i18n="downloadHelp.commandNote">O comando remove a marca de quarentena apenas de /Applications/LUM4.app e tenta abrir o app.</p>
+              </div>
+            </div>
+          </details>
           <p class="requirements" data-i18n="hero.requirements">macOS 26+ · Apple Silicon · Tela XDR integrada</p>
           <div class="download-summary" aria-live="polite">
             <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
