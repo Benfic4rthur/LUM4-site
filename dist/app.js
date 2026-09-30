@@ -657,6 +657,29 @@ async function loadPayPalSdk() {
   }
 }
 
+async function releaseCancelledPayPalCheckout(purchaseId, orderId) {
+  if (!purchaseId || !orderId) return;
+
+  try {
+    await fetch(
+      `${licenseApiBase}/v1/checkout/paypal/${encodeURIComponent(purchaseId)}/cancel`,
+      {
+        method: 'POST',
+        cache: 'no-store',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ orderId })
+      }
+    );
+  } catch {
+    // Best-effort cleanup. The reservation also expires server-side.
+  }
+}
+
 async function ensurePayPalCheckout() {
   if (
     !product.paypalAvailable ||
@@ -751,8 +774,11 @@ async function ensurePayPalCheckout() {
       },
       onCancel() {
         if (!checkoutDialog.open) return;
+        const purchaseId = activePurchase;
+        const orderId = activePayPalOrder;
         activePurchase = null;
         activePayPalOrder = null;
+        void releaseCancelledPayPalCheckout(purchaseId, orderId);
         checkoutError.textContent = copy().strings['checkout.paypalCancelled'];
         checkoutError.hidden = false;
       },
