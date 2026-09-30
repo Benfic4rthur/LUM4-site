@@ -1,8 +1,9 @@
 import { createServer } from 'node:http';
-import { readFile, writeFile, rename, stat } from 'node:fs/promises';
-import { resolve, extname, sep, dirname } from 'node:path';
+import { readFile, writeFile, rename } from 'node:fs/promises';
+import { resolve, extname, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getLicensePlans } from './license-plans.mjs';
+import { resolvePublicFile } from './public-files.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const publicRoot = resolve(root, 'dist');
@@ -10,7 +11,7 @@ const configPath = resolve(root, 'site.config.json');
 const counterPath = process.env.LUM4_COUNTER_FILE || resolve(root, 'data/downloads.json');
 const port = Number(process.env.PORT || 4178);
 const host = process.env.HOST || '127.0.0.1';
-const contentTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/vnd.microsoft.icon' };
+const contentTypes = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.ico': 'image/vnd.microsoft.icon', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.avif': 'image/avif' };
 let counterQueue = Promise.resolve();
 
 function validUrl(value) {
@@ -50,8 +51,10 @@ function json(res, status, data) {
 
 const server = createServer(async (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://lum-4-license-server.vercel.app; frame-ancestors 'none'; base-uri 'self'; form-action 'none'");
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self'; style-src-attr 'none'; script-src 'self'; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app; frame-ancestors 'none'");
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.setHeader('Allow', 'GET, HEAD'); return json(res, 405, { error: 'Método indisponível.' }); }
     const { pathname, searchParams } = new URL(req.url, 'http://localhost');
@@ -71,12 +74,12 @@ const server = createServer(async (req, res) => {
       res.writeHead(302, { Location: target, 'Cache-Control': 'no-store' });
       return res.end();
     }
-    const decoded = decodeURIComponent(pathname);
-    const path = resolve(publicRoot, '.' + (decoded === '/' ? '/index.html' : decoded));
-    if (!path.startsWith(publicRoot + sep) || decoded.includes('\0')) return json(res, 404, { error: 'Página não encontrada.' });
-    const info = await stat(path).catch(() => null);
-    if (!info?.isFile()) return json(res, 404, { error: 'Página não encontrada.' });
-    res.writeHead(200, { 'Content-Type': contentTypes[extname(path)] || 'application/octet-stream', 'Content-Length': info.size, 'Cache-Control': path.includes('/assets/') ? 'public, max-age=3600' : 'no-cache' });
+    let decoded;
+    try { decoded = decodeURIComponent(pathname); } catch { return json(res, 400, { error: 'Endereço inválido.' }); }
+    const file = await resolvePublicFile(publicRoot, decoded === '/' ? 'index.html' : decoded.slice(1));
+    if (!file) return json(res, 404, { error: 'Página não encontrada.' });
+    const { path, info } = file;
+    res.writeHead(200, { 'Content-Type': contentTypes[extname(path).toLowerCase()] || 'application/octet-stream', 'Content-Length': info.size, 'Cache-Control': path.includes('/assets/') ? 'public, max-age=3600' : 'no-cache' });
     if (req.method === 'HEAD') return res.end();
     res.end(await readFile(path));
   } catch {
@@ -85,4 +88,4 @@ const server = createServer(async (req, res) => {
   }
 });
 server.on('error', error => { console.error(`Não foi possível abrir a prévia: ${error.message}`); process.exitCode = 1; });
-server.listen(port, host, () => { console.log(`LUM4 — prévia local: http://${host}:${port}`); });
+server.listen(port, host, () => { console.log(`LUM4 — prévia local: http://${host}:${server.address().port}`); });

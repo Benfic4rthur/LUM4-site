@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "node server.mjs",
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check license-plans.mjs && node --check dist/locales.js && node --check dist/app.js && node --check scripts/build-pages.mjs",
+    "check": "node --check server.mjs && node --check license-plans.mjs && node --check public-files.mjs && node --check dist/locales.js && node --check dist/app.js && node --check scripts/build-pages.mjs",
+    "test:security": "node --test tests/*.test.mjs",
     "build:pages": "node scripts/build-pages.mjs"
   },
-  "engines": { "node": ">=20" }
+  "engines": { "node": ">=22" }
 }

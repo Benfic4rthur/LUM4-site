@@ -4,13 +4,13 @@ Site do LUM4 em português, inglês e espanhol, com identidade da marca, prévia
 
 ## Abrir
 
-Com Node.js 20 ou mais recente, execute `npm run dev` nesta pasta e abra **http://127.0.0.1:4178**. Nenhuma instalação de dependências é necessária. `npm run check` verifica a sintaxe dos scripts e do gerador estático.
+Com Node.js 22 ou mais recente, execute `npm run dev` nesta pasta e abra **http://127.0.0.1:4178**. Nenhuma instalação de dependências é necessária. `npm run check` verifica a sintaxe; `npm run test:security` testa a publicação, os caminhos do servidor e respostas atrasadas de compra em ambientes isolados, sem pedidos ou pagamentos reais.
 
 ## GitHub Pages
 
 O workflow `.github/workflows/pages.yml` verifica o projeto, gera o site estático e publica a cada envio para `main`. Também pode ser executado manualmente na aba Actions. Em Settings → Pages, a origem da publicação deve ser **GitHub Actions** e o domínio personalizado deve ser `lum4.app`.
 
-`npm run build:pages` prepara `work/pages-site`, que é a única pasta enviada à hospedagem. O gerador copia os arquivos públicos de `dist`, identifica a página como hospedagem estática e inclui `.nojekyll`, `CNAME` e `product.json`. Esse arquivo público contém preço, moeda e links HTTPS válidos fornecidos em `site.config.json`; não inclua credenciais nem links privados nessa configuração. O servidor local, os dados locais e os arquivos de trabalho não são publicados.
+`npm run build:pages` prepara `work/pages-site`, que é a única pasta enviada à hospedagem. `public-files.mjs` permite apenas os arquivos da página e imagens em `assets`; o build falha diante de arquivos ocultos, backups, links simbólicos ou tipos inesperados. O gerador identifica a página como hospedagem estática e inclui `.nojekyll`, `CNAME` e `product.json`. Esse arquivo público contém preço, moeda e links HTTPS válidos fornecidos em `site.config.json`; não inclua credenciais nem links privados nessa configuração. O servidor local, os dados locais e os arquivos de trabalho não são publicados. As actions do workflow estão fixadas por SHA, com credenciais de checkout descartadas e testes antes da publicação. Para atualizar as actions, confirme o commit na origem oficial de cada uma.
 
 Na Hostinger, o domínio aponta para os endereços de GitHub Pages; `www` usa CNAME para `benfic4rthur.github.io`. A opção Enforce HTTPS no GitHub deve ser habilitada quando o certificado do domínio estiver disponível. Referência: [configuração de domínio personalizado no GitHub Pages](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site).
 
@@ -32,7 +32,7 @@ O cartão permite selecionar o número de Macs. A economia do pacote de 3 Macs �
 
 Ao passar o mouse sobre um pacote, ele sobe 4 pixels e recebe uma borda e um brilho âmbar suaves. O efeito usa apenas CSS e respeita movimento reduzido; a seleção da licença permanece independente do destaque do mouse.
 
-O download é público e não exige login no GitHub. Sem links de pagamento configurados, a compra informa indisponibilidade. O preço permanece em reais nos três idiomas; alterar `currency` permite ajustar a moeda, sem conversão automática.
+O download é público e não exige login no GitHub. A compra atual consulta os planos, cupons públicos e estatísticas de `https://lum-4-license-server.vercel.app`. Após o usuário enviar o formulário, essa API cria o Pix e informa a confirmação/licença; o preço e a autorização de pagamento precisam ser validados no servidor. A configuração local mantém valores e redirecionamentos de compatibilidade. Se os planos da API estiverem indisponíveis, a compra fica desabilitada e o download continua independente. Fechar ou reabrir a compra cancela as consultas anteriores; respostas e animações de sessões antigas não substituem o Pix ou a licença atuais.
 
 Ao iniciar um download, o site expande as instruções de primeira abertura logo abaixo do botão, sem interromper o link direto. O usuário também pode abrir o aviso antes de baixar. Sem JavaScript, as instruções ficam expandidas. O texto informa que a versão atual ainda não foi autenticada pela Apple e orienta a autorização em Privacidade e Segurança, com referência ao suporte da Apple. A alternativa no Terminal mostra o comando fornecido pelo responsável pelo app, restrito a `/Applications/LUM4.app`, com opção de copiar; o site não executa o comando. O aviso e as instruções estão disponíveis em português, inglês e espanhol.
 
@@ -54,12 +54,22 @@ A capa de compartilhamento é renderizada de `scripts/share-card.html` em 1200 �
 - Video Detail Protection tem explicação própria: quando o macOS indica reprodução de vídeo, o LUM4 reduz temporariamente o Boost XDR para 50% do valor escolhido, ajudando a preservar detalhes da imagem, e restaura o valor anterior ao terminar. O recurso não captura nem analisa a imagem da tela.
 - A nota sobre a tela explica o uso de EDR nativo e os limites de hardware. Os detalhes ficam recolhidos para manter a página leve, com links à Apple sobre [EDR](https://developer.apple.com/videos/play/wwdc2021/10161/) e [limitação de brilho em temperaturas elevadas](https://support.apple.com/en-us/101865). O mecanismo do app foi conferido: renderização Metal/EDR e teto baseado na capacidade potencial informada por `NSScreen`. Isso não é uma certificação da Apple nem uma garantia de ausência de desgaste; o texto também informa que brilho intenso pode aumentar o consumo de energia.
 - Marca original do app; fotografia criada para a página e comprimida em WebP.
-- Fontes do sistema, sem bibliotecas de interface, rastreadores ou serviços externos no carregamento.
+- Fontes do sistema, sem bibliotecas de interface ou rastreadores; os dados de compra são consultados na API de licenças.
 - Responsivo, controles por teclado, modais nativos e respeito à preferência de movimento reduzido.
 - Abertura em etapas suaves no cabeçalho, texto e prévia, repetida a cada carregamento. Os elementos abaixo aparecem uma vez conforme a rolagem, usando IntersectionObserver sem dependências. Os efeitos usam opacidade e pequenos deslocamentos, respeitam movimento reduzido e mantêm o acesso por teclado.
 - Uma passagem de luz âmbar percorre a frase “o que importa.” uma vez ao abrir a página, com um halo discreto que desaparece completamente. Dura cerca de três segundos, não roda em loop e respeita movimento reduzido.
 
 Os arquivos publicados não contêm credenciais nem código do repositório privado do aplicativo.
+
+## Segurança e limites
+
+O HTML aplica CSP com scripts e estilos locais, sem JavaScript/estilos inline, sem plugins, frames internos, envio nativo de formulários ou alteração de URL base. As conexões ficam restritas à própria origem e à API de licenças. `no-referrer` evita compartilhar URLs ao navegar para outro serviço. A mensagem do console é apenas uma brincadeira e não controla acesso nem bloqueia DevTools.
+
+O rodapé publica o contato `suporte@allm4.com` com link `mailto:` e rótulo nos três idiomas. Abrir o link prepara o contato no aplicativo de e-mail do visitante; o site não envia mensagens automaticamente.
+
+O servidor de prévia atende em `127.0.0.1` por padrão, rejeita caminhos fora da lista pública e symlinks, limita métodos a GET/HEAD e adiciona CSP, `nosniff`, bloqueio de enquadramento e Permissions-Policy. Esses cabeçalhos do servidor local não são enviados pelo GitHub Pages. Na hospedagem pública, `frame-ancestors`, X-Frame-Options, nosniff e Permissions-Policy precisam de uma camada HTTP configurável; não funcionam como substitutos em tags meta. HTTPS obrigatório está habilitado no Pages. A CSP em meta já vale na página pública.
+
+A auditoria de 30/09/2026 não comprovou invasão ou bypass de pagamento. Permanecem pontos de administração: proteger `main`, confirmar a verificação do domínio na conta GitHub e habilitar alertas de dependências. A API de licenças tem escopo próprio: confirmar proteção contra excesso de requisições, rejeição de webhooks antes de gravar payloads e validação de certificado do banco. A revisão de fonte e as consultas públicas não constituem um teste de invasão nem uma garantia de segurança absoluta.
 
 ## Versão anterior
 

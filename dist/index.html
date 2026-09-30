@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0c0d0f" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; form-action 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self' https://lum-4-license-server.vercel.app" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self'; style-src-attr 'none'; script-src 'self'; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app" />
+    <meta name="referrer" content="no-referrer" />
     <meta name="description" data-i18n-content="meta.description" content="LUM4 by ALLM4. Boost XDR nativo para macOS, com controle simples e IA local que aprende suas preferências. Para Macs Apple Silicon com tela XDR integrada." />
     <meta property="og:title" data-i18n-content="meta.title" content="LUM4 — Mais luz para o que importa." />
     <meta property="og:description" data-i18n-content="meta.socialDescription" content="Descubra uma nova luz no seu Mac. Um app nativo e simples para aproveitar o brilho da sua tela XDR." />
@@ -33,9 +34,9 @@
     <link rel="icon" type="image/png" sizes="256x256" href="/assets/lum4-favicon-256-v4.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v4.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=first-launch-help1" />
-    <script src="/locales.js?v=first-launch-help1" defer></script>
-    <script src="/app.js?v=first-launch-help1" defer></script>
+    <link rel="stylesheet" href="/styles.css?v=support1" />
+    <script src="/locales.js?v=support1" defer></script>
+    <script src="/app.js?v=security-audit1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
@@ -233,7 +234,12 @@
       </section>
     </main>
 
-    <footer class="site-footer wrap"><a class="footer-brand" href="#">LUM4 <span>by ALLM4</span></a><p data-i18n="footer.slogan">Mais luz para o que importa.</p><div class="footer-meta"><span data-i18n="footer.platform">Feito para macOS.</span><span class="footer-sales-counter" data-sales-counter hidden>· <strong data-sales-number>0</strong> <span data-sales-label>vendas realizadas</span></span></div></footer>
+    <footer class="site-footer wrap">
+      <a class="footer-brand" href="#">LUM4 <span>by ALLM4</span></a>
+      <p data-i18n="footer.slogan">Mais luz para o que importa.</p>
+      <a class="footer-support" href="mailto:suporte@allm4.com"><span data-i18n="footer.support">Suporte</span><span>suporte@allm4.com</span></a>
+      <div class="footer-meta"><span data-i18n="footer.platform">Feito para macOS.</span><span class="footer-sales-counter" data-sales-counter hidden>· <strong data-sales-number>0</strong> <span data-sales-label>vendas realizadas</span></span></div>
+    </footer>
 
     <dialog id="availability-dialog" aria-labelledby="dialog-title" aria-describedby="dialog-description">
       <button id="dialog-close" class="dialog-close" type="button" aria-label="Fechar" data-i18n-aria-label="dialog.close"><svg class="icon" aria-hidden="true"><use href="#i-close" /></svg></button>

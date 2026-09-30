@@ -1,3 +1,5 @@
+console.log('sai daqui, ô metido a hacker.');
+
 const range = document.querySelector('#boost-range');
 const output = document.querySelector('#boost-output');
 const toggle = document.querySelector('#boost-switch');
@@ -242,10 +244,31 @@ dialog.addEventListener('click', event => {
 });
 
 let purchasePollTimer = null;
+let checkoutGeneration = 0;
+let checkoutRequestController = null;
+let purchasePollController = null;
 
 function clearPurchasePoll() {
   if (purchasePollTimer) window.clearTimeout(purchasePollTimer);
   purchasePollTimer = null;
+}
+
+function invalidateCheckoutSession() {
+  checkoutGeneration += 1;
+  clearPurchasePoll();
+  checkoutRequestController?.abort();
+  purchasePollController?.abort();
+  checkoutRequestController = null;
+  purchasePollController = null;
+  activePurchase = null;
+}
+
+function isCurrentCheckout(generation) {
+  return generation === checkoutGeneration && checkoutDialog.open;
+}
+
+function isCurrentPurchase(purchaseId, generation) {
+  return isCurrentCheckout(generation) && activePurchase === purchaseId;
 }
 
 async function animateCheckoutElements(elements, keyframes, options) {
@@ -260,7 +283,8 @@ async function animateCheckoutElements(elements, keyframes, options) {
   );
 }
 
-async function transitionToPixResult() {
+async function transitionToPixResult(generation) {
+  if (!isCurrentCheckout(generation)) return false;
   const outgoing = [
     checkoutForm.querySelector('.checkout-field'),
     checkoutPublicCoupon,
@@ -280,6 +304,7 @@ async function transitionToPixResult() {
     }
   );
 
+  if (!isCurrentCheckout(generation)) return false;
   checkoutDialog.classList.add('pix-created');
   pixPurchaseSummary.hidden = false;
   pixResult.hidden = false;
@@ -297,6 +322,7 @@ async function transitionToPixResult() {
     }
   );
 
+  if (!isCurrentCheckout(generation)) return false;
   await animateCheckoutElements(
     [pixQr],
     [
@@ -309,14 +335,16 @@ async function transitionToPixResult() {
       fill: 'both'
     }
   );
+  return isCurrentCheckout(generation);
 }
 
-async function transitionToLicenseResult(licenseValue) {
+async function transitionToLicenseResult(licenseValue, purchaseId, generation) {
   if (
+    !isCurrentPurchase(purchaseId, generation) ||
     checkoutDialog.classList.contains('payment-confirmed') ||
     checkoutDialog.classList.contains('payment-transitioning')
   ) {
-    return;
+    return false;
   }
 
   checkoutDialog.classList.add('payment-transitioning');
@@ -341,6 +369,7 @@ async function transitionToLicenseResult(licenseValue) {
     }
   );
 
+  if (!isCurrentPurchase(purchaseId, generation)) return false;
   pixStatus.textContent = message('checkoutPaymentConfirmed');
   licenseKey.textContent = licenseValue;
   licenseResult.hidden = false;
@@ -359,6 +388,7 @@ async function transitionToLicenseResult(licenseValue) {
       fill: 'both'
     }
   );
+  return isCurrentPurchase(purchaseId, generation);
 }
 
 function checkoutErrorMessage(error, fallback = 'checkoutUnavailable') {
@@ -445,8 +475,7 @@ function renderPublishedCoupon() {
 }
 
 function resetCheckoutResult() {
-  clearPurchasePoll();
-  activePurchase = null;
+  invalidateCheckoutSession();
   checkoutError.hidden = true;
   checkoutError.textContent = '';
   pixResult.hidden = true;
@@ -486,7 +515,7 @@ function openCheckout() {
 }
 
 function closeCheckout() {
-  clearPurchasePoll();
+  invalidateCheckoutSession();
   checkoutDialog.close();
 }
 
@@ -513,6 +542,7 @@ document.querySelectorAll('[data-checkout-plan-option]').forEach(button => {
 });
 
 document.querySelector('#checkout-close').addEventListener('click', closeCheckout);
+checkoutDialog.addEventListener('cancel', invalidateCheckoutSession);
 checkoutDialog.addEventListener('click', event => {
   const rect = checkoutDialog.getBoundingClientRect();
   if (event.target === checkoutDialog && (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom)) closeCheckout();
@@ -539,23 +569,28 @@ document.querySelector('#license-copy').addEventListener('click', async () => {
   }
 });
 
-async function pollPurchase(purchaseId) {
+async function pollPurchase(purchaseId, generation = checkoutGeneration) {
+  if (!isCurrentPurchase(purchaseId, generation)) return;
   clearPurchasePoll();
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 8000);
+  purchasePollController = controller;
   try {
     const response = await fetch(`${licenseApiBase}/v1/checkout/${encodeURIComponent(purchaseId)}`, {
       cache: 'no-store',
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
-      signal: AbortSignal.timeout(8000),
+      signal: controller.signal,
       headers: { Accept: 'application/json' }
     });
     if (!response.ok) throw new Error('Status unavailable');
     const data = await response.json();
-    if (activePurchase !== purchaseId) return;
+    if (!isCurrentPurchase(purchaseId, generation)) return;
 
     if (data.licensed === true && typeof data.licenseKey === 'string' && data.licenseKey.trim()) {
-      await transitionToLicenseResult(data.licenseKey.trim());
-      void refreshProduct();
+      if (await transitionToLicenseResult(data.licenseKey.trim(), purchaseId, generation)) {
+        void refreshProduct();
+      }
       return;
     }
 
@@ -567,17 +602,21 @@ async function pollPurchase(purchaseId) {
       return;
     }
   } catch {
-    if (activePurchase !== purchaseId) return;
+    if (!isCurrentPurchase(purchaseId, generation)) return;
+  } finally {
+    window.clearTimeout(timeout);
+    if (purchasePollController === controller) purchasePollController = null;
   }
 
-  if (activePurchase === purchaseId && checkoutDialog.open) {
-    purchasePollTimer = window.setTimeout(() => void pollPurchase(purchaseId), 3000);
+  if (isCurrentPurchase(purchaseId, generation)) {
+    purchasePollTimer = window.setTimeout(() => void pollPurchase(purchaseId, generation), 3000);
   }
 }
 
 checkoutForm.addEventListener('submit', async event => {
   event.preventDefault();
   resetCheckoutResult();
+  const generation = checkoutGeneration;
 
   const email = checkoutEmail.value.trim();
   if (!checkoutEmail.checkValidity() || !email) {
@@ -593,6 +632,9 @@ checkoutForm.addEventListener('submit', async event => {
     : '';
   checkoutSubmit.disabled = true;
   checkoutSubmit.querySelector('span').textContent = message('checkoutCreating');
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  checkoutRequestController = controller;
 
   try {
     const response = await fetch(`${licenseApiBase}/v1/checkout/create`, {
@@ -600,7 +642,7 @@ checkoutForm.addEventListener('submit', async event => {
       cache: 'no-store',
       credentials: 'omit',
       referrerPolicy: 'no-referrer',
-      signal: AbortSignal.timeout(15000),
+      signal: controller.signal,
       headers: {
         Accept: 'application/json',
         'Content-Type': 'application/json'
@@ -612,6 +654,7 @@ checkoutForm.addEventListener('submit', async event => {
       })
     });
     const data = await response.json().catch(() => ({}));
+    if (!isCurrentCheckout(generation)) return;
     if (!response.ok) throw data;
 
     if (typeof data.purchaseId !== 'string' || !data.pix || typeof data.pix !== 'object') {
@@ -643,16 +686,22 @@ checkoutForm.addEventListener('submit', async event => {
     pixStatus.textContent = message('checkoutCreated', {
       amount: formattedPrice(Number(data.amount))
     });
-    await transitionToPixResult();
-    void pollPurchase(data.purchaseId);
+    if (await transitionToPixResult(generation)) {
+      void pollPurchase(data.purchaseId, generation);
+    }
   } catch (error) {
+    if (!isCurrentCheckout(generation)) return;
     checkoutError.textContent = error instanceof Error
       ? message('checkoutUnavailable')
       : checkoutErrorMessage(error);
     checkoutError.hidden = false;
   } finally {
-    checkoutSubmit.disabled = false;
-    checkoutSubmit.querySelector('span').textContent = copy().strings['checkout.generatePix'];
+    window.clearTimeout(timeout);
+    if (checkoutRequestController === controller) checkoutRequestController = null;
+    if (isCurrentCheckout(generation)) {
+      checkoutSubmit.disabled = false;
+      checkoutSubmit.querySelector('span').textContent = copy().strings['checkout.generatePix'];
+    }
   }
 });
 

@@ -1,11 +1,13 @@
-import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getLicensePlans } from '../license-plans.mjs';
+import { listPublicFiles, resolvePublicFile } from '../public-files.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const source = resolve(root, 'dist');
 const output = resolve(root, 'work/pages-site');
+const publicFiles = await listPublicFiles(source);
 const config = JSON.parse(await readFile(resolve(root, 'site.config.json'), 'utf8'));
 const sourceHtml = await readFile(resolve(source, 'index.html'), 'utf8');
 
@@ -36,7 +38,13 @@ const product = {
 
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
-await cp(source, output, { recursive: true });
+for (const relativePath of publicFiles) {
+  const file = await resolvePublicFile(source, relativePath);
+  if (!file) throw new Error(`Arquivo público rejeitado: ${relativePath}`);
+  const destination = resolve(output, relativePath);
+  await mkdir(dirname(destination), { recursive: true });
+  await copyFile(file.path, destination);
+}
 await writeFile(resolve(output, 'index.html'), html, 'utf8');
 await writeFile(resolve(output, 'product.json'), JSON.stringify(product, null, 2) + '\n', 'utf8');
 await writeFile(resolve(output, '.nojekyll'), '', 'utf8');
