@@ -71,7 +71,8 @@ function fixture() {
     checkoutOriginalPrice: '[data-checkout-original-price]',
     checkoutDiscountBadge: '[data-checkout-discount-badge]',
     checkoutPrice: '[data-checkout-price]', checkoutError: '#checkout-error',
-    checkoutSubmit: '#checkout-submit', pixResult: '#pix-result',
+    checkoutSubmit: '#checkout-submit', paypalButton: '#paypal-button',
+    pixResult: '#pix-result',
     pixPurchaseSummary: '[data-pix-purchase-summary]',
     pixEmailSummary: '[data-pix-email-summary]', pixCouponSummary: '[data-pix-coupon-summary]',
     pixQr: '#pix-qr', pixCode: '#pix-code', pixStatus: '#pix-status',
@@ -79,13 +80,26 @@ function fixture() {
     licenseCopyStatus: '#license-copy-status'
   };
   const globals = Object.fromEntries(Object.entries(namedElements).map(([name, selector]) => [name, element(selector)]));
+  const pixMethod = element('[data-payment-method="pix"]');
+  pixMethod.dataset.paymentMethod = 'pix';
+  const paypalMethod = element('[data-payment-method="paypal"]');
+  paypalMethod.dataset.paymentMethod = 'paypal';
+  globals.paymentMethodButtons = [pixMethod, paypalMethod];
   globals.checkoutDialog.open = true;
   globals.checkoutEmail.value = 'audit-a@example.invalid';
 
   const context = vm.createContext({
     ...globals, AbortController, AbortSignal, performance,
     licenseApiBase: 'https://audit.invalid',
-    document: { querySelector: element, querySelectorAll: () => [] },
+    document: {
+      querySelector: element,
+      querySelectorAll(selector) {
+        if (selector === '[data-payment-method]') return globals.paymentMethodButtons;
+        return [];
+      },
+      createElement: () => element('script'),
+      head: { appendChild() {} }
+    },
     window: {
       setTimeout(callback) { const id = ++timerId; timers.set(id, callback); return id; },
       clearTimeout: id => timers.delete(id)
@@ -97,15 +111,35 @@ function fixture() {
       return result.promise;
     },
     message: key => key,
-    copy: () => ({ strings: { 'checkout.generatePix': 'Generate Pix' } }),
+    copy: () => ({ strings: {
+      'checkout.generatePix': 'Generate Pix',
+      'checkout.paypalLoading': 'Preparing PayPal',
+      'checkout.paypalError': 'PayPal error',
+      'checkout.paypalCancelled': 'PayPal cancelled'
+    } }),
     formattedPrice: value => String(value),
+    formatMoney: value => String(value),
+    checkoutCurrency: () => 'BRL',
+    checkoutBasePrice: plan => plan.price,
+    formattedCheckoutPrice: value => String(value),
     renderProduct() {}, refreshProduct: async () => {},
-    product: { plans: [{ id: 'synthetic-plan', devices: 1, price: 14.99 }] }
+    product: {
+      currency: 'BRL',
+      paypalCurrency: 'USD',
+      paypalAvailable: false,
+      paypalClientId: null,
+      paypalEnvironment: 'sandbox',
+      plans: [{ id: 'synthetic-plan', devices: 1, price: 14.99, priceUSD: 9.99 }]
+    }
   });
   vm.runInContext(`
     let activePurchase = null;
+    let activePayPalOrder = null;
     let publishedCoupon = null;
     let selectedDevices = 1;
+    let checkoutPaymentMethod = 'pix';
+    let paypalPaymentSession = null;
+    let paypalSdkPromise = null;
     const motionPreference = { matches: true };
     function selectedPlan() { return product.plans[0]; }
   `, context);
