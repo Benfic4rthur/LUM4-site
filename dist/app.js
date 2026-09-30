@@ -782,7 +782,8 @@ async function ensurePayPalCheckout() {
         checkoutError.textContent = copy().strings['checkout.paypalCancelled'];
         checkoutError.hidden = false;
       },
-      onError() {
+      onError(error) {
+        console.error('PayPal payment error:', error);
         if (!checkoutDialog.open) return;
         checkoutError.textContent = copy().strings['checkout.paypalError'];
         checkoutError.hidden = false;
@@ -867,6 +868,7 @@ paypalButton.addEventListener('click', async () => {
       createPayPalOrderForCheckout()
     );
   } catch (error) {
+    console.error('PayPal payment start error:', error);
     if (!checkoutDialog.open) return;
     checkoutError.textContent = error instanceof Error
       ? copy().strings['checkout.paypalError']
