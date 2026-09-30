@@ -379,19 +379,21 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 
 /* Quiet sales metadata in the footer. */
 .site-footer{flex-wrap:wrap}
-.footer-support{display:flex;flex-direction:column;justify-content:center;gap:2px;min-height:44px;color:#d8b48d;font-size:.8125rem}
+.footer-support{display:inline-flex;align-items:baseline;gap:4px;flex-shrink:0;white-space:nowrap;min-height:44px;padding-block:12px;color:#d8b48d;font-size:.8125rem}
 .footer-support>span:first-child{color:#9399a3;font-size:.75rem}
 .footer-support>span:last-child{text-decoration:underline;text-decoration-color:#ffb66c35;text-underline-offset:4px}
 .footer-support:hover{color:var(--accent-bright)}
 .footer-meta{
   display:flex;
+  flex-wrap:wrap;
   align-items:center;
   justify-content:flex-end;
   gap:7px;
+  max-width:100%;
   color:#777b84;
   font-size:.6875rem;
-  white-space:nowrap;
 }
+.footer-meta>span{white-space:nowrap}
 .footer-sales-counter{color:#6f737b}
 .footer-sales-counter strong{
   color:#858991;
@@ -400,5 +402,5 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 }
 .footer-sales-counter[hidden]{display:none!important}
 @media(max-width:640px){
-  .footer-meta{font-size:.65625rem}
+  .footer-meta{justify-content:flex-start;font-size:.65625rem}
 }

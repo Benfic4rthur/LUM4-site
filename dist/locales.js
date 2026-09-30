@@ -122,7 +122,7 @@ window.LUM4_LOCALES = {
       'checkout.copyLicense': 'Copiar licença',
       'footer.slogan': 'Mais luz para o que importa.',
       'footer.platform': 'Feito para macOS.',
-      'footer.support': 'Suporte',
+      'footer.support': 'Suporte:',
       'dialog.close': 'Fechar',
       'dialog.done': 'Entendi',
       'noscript': 'Você pode baixar o LUM4 pelo botão acima. Ative o JavaScript para experimentar a prévia e consultar a compra.'
@@ -321,7 +321,7 @@ window.LUM4_LOCALES = {
       'checkout.copyLicense': 'Copy license',
       'footer.slogan': 'More light for what matters.',
       'footer.platform': 'Made for macOS.',
-      'footer.support': 'Support',
+      'footer.support': 'Support:',
       'dialog.close': 'Close',
       'dialog.done': 'Got it',
       'noscript': 'You can download LUM4 using the button above. Enable JavaScript to try the preview and view purchase options.'
@@ -520,7 +520,7 @@ window.LUM4_LOCALES = {
       'checkout.copyLicense': 'Copiar licencia',
       'footer.slogan': 'Más luz para lo que importa.',
       'footer.platform': 'Hecho para macOS.',
-      'footer.support': 'Soporte',
+      'footer.support': 'Soporte:',
       'dialog.close': 'Cerrar',
       'dialog.done': 'Entendido',
       'noscript': 'Puedes descargar LUM4 con el botón de arriba. Activa JavaScript para probar la vista previa y consultar la compra.'
