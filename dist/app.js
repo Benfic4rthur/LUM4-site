@@ -18,6 +18,8 @@ const checkoutDiscountBadge = document.querySelector('[data-checkout-discount-ba
 const checkoutPrice = document.querySelector('[data-checkout-price]');
 const checkoutError = document.querySelector('#checkout-error');
 const checkoutSubmit = document.querySelector('#checkout-submit');
+const paypalButton = document.querySelector('#paypal-button');
+const paymentMethodButtons = [...document.querySelectorAll('[data-payment-method]')];
 const pixResult = document.querySelector('#pix-result');
 const pixPurchaseSummary = document.querySelector('[data-pix-purchase-summary]');
 const pixEmailSummary = document.querySelector('[data-pix-email-summary]');
@@ -35,11 +37,15 @@ const demoSalesBoost = 15;
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 // The public download link works independently of product and checkout requests.
 const directDownloadAvailable = Boolean(document.querySelector('[data-download][href^="https://"]'));
-let product = { downloadAvailable: directDownloadAvailable, checkoutAvailable: false, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
+let product = { downloadAvailable: directDownloadAvailable, checkoutAvailable: false, paypalAvailable: false, price: 14.99, currency: 'BRL', paypalCurrency: 'USD', paypalEnvironment: 'sandbox', paypalClientId: null, plans: [{ id: 'mac_1', devices: 1, price: 14.99, priceUSD: 9.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, priceUSD: 17.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, priceUSD: 23.99, checkoutAvailable: false }] };
 let publishedCoupon = null;
 let salesCount = 0;
 let activePurchase = null;
+let activePayPalOrder = null;
 let selectedDevices = 1;
+let checkoutPaymentMethod = 'pix';
+let paypalPaymentSession = null;
+let paypalSdkPromise = null;
 let availabilityType = 'download';
 const locales = window.LUM4_LOCALES;
 function validLanguage(value) { return typeof value === 'string' && Object.hasOwn(locales, value); }
@@ -268,8 +274,24 @@ tabs.forEach(tab => {
 });
 
 function selectedPlan() { return product.plans.find(plan => plan.devices === selectedDevices); }
+function formatMoney(price, currency) {
+  return new Intl.NumberFormat(copy().locale, {
+    style: 'currency',
+    currency,
+    currencyDisplay: language === 'pt' && currency === 'BRL' ? 'symbol' : 'code'
+  }).format(price);
+}
 function formattedPrice(price = selectedPlan().price) {
-  return new Intl.NumberFormat(copy().locale, { style: 'currency', currency: product.currency, currencyDisplay: language === 'pt' ? 'symbol' : 'code' }).format(price);
+  return formatMoney(price, product.currency);
+}
+function checkoutCurrency() {
+  return checkoutPaymentMethod === 'paypal' ? product.paypalCurrency : product.currency;
+}
+function checkoutBasePrice(plan = selectedPlan()) {
+  return checkoutPaymentMethod === 'paypal' ? plan.priceUSD : plan.price;
+}
+function formattedCheckoutPrice(price = checkoutBasePrice()) {
+  return formatMoney(price, checkoutCurrency());
 }
 function updateDialog() {
   const prefix = availabilityType === 'checkout' ? 'checkout' : 'download';
@@ -319,6 +341,7 @@ function invalidateCheckoutSession() {
   checkoutRequestController = null;
   purchasePollController = null;
   activePurchase = null;
+  activePayPalOrder = null;
 }
 
 function isCurrentCheckout(generation) {
@@ -460,8 +483,9 @@ function checkoutErrorMessage(error, fallback = 'checkoutUnavailable') {
 }
 
 function couponPrice(plan, enabled = checkoutUsePublicCoupon.checked) {
-  if (!enabled || !publishedCoupon) return plan.price;
-  const cents = Math.round(plan.price * 100);
+  const basePrice = checkoutBasePrice(plan);
+  if (!enabled || !publishedCoupon) return basePrice;
+  const cents = Math.round(basePrice * 100);
   const discounted = cents - Math.round(cents * publishedCoupon.discountPercent / 100);
   return Math.max(1, discounted) / 100;
 }
@@ -474,7 +498,7 @@ function animateCheckoutPrice(from, to) {
     const progress = duration === 0 ? 1 : Math.min(1, (now - startedAt) / duration);
     const eased = 1 - Math.pow(1 - progress, 3);
     const value = from + (to - from) * eased;
-    checkoutPrice.textContent = formattedPrice(value);
+    checkoutPrice.textContent = formattedCheckoutPrice(value);
     if (progress < 1) requestAnimationFrame(frame);
   }
 
@@ -497,11 +521,11 @@ function renderCheckoutSummary(animate = false) {
   );
   const nextPrice = couponPrice(plan, usePublicCoupon);
   const currentPrice = Number(
-    checkoutPrice.dataset.numericPrice ?? plan.price
+    checkoutPrice.dataset.numericPrice ?? checkoutBasePrice(plan)
   );
 
   checkoutOriginalPrice.hidden = !usePublicCoupon;
-  checkoutOriginalPrice.textContent = formattedPrice(plan.price);
+  checkoutOriginalPrice.textContent = formattedCheckoutPrice(checkoutBasePrice(plan));
   checkoutDiscountBadge.hidden = !usePublicCoupon;
   checkoutDiscountBadge.textContent = usePublicCoupon
     ? `−${publishedCoupon.discountPercent}%`
@@ -514,7 +538,7 @@ function renderCheckoutSummary(animate = false) {
   if (animate && Math.abs(currentPrice - nextPrice) > 0.0001) {
     animateCheckoutPrice(currentPrice, nextPrice);
   } else {
-    checkoutPrice.textContent = formattedPrice(nextPrice);
+    checkoutPrice.textContent = formattedCheckoutPrice(nextPrice);
   }
 }
 
@@ -557,17 +581,266 @@ function resetCheckoutResult() {
   licenseCopyStatus.textContent = '';
   pixQr.hidden = true;
   pixQr.removeAttribute('src');
+  document.querySelector('.pix-result-heading').hidden = false;
+  document.querySelector('.pix-instruction').hidden = false;
+  document.querySelector('.pix-code-row').hidden = false;
   pixCode.textContent = '';
   pixStatus.textContent = message('checkoutPaymentPending');
+  checkoutSubmit.hidden = false;
   checkoutSubmit.disabled = false;
   checkoutSubmit.querySelector('span').textContent = copy().strings['checkout.generatePix'];
+  paypalButton.hidden = true;
 }
+
+function renderPaymentMethod() {
+  paymentMethodButtons.forEach(button => {
+    const method = button.dataset.paymentMethod;
+    const paypal = method === 'paypal';
+    button.disabled = paypal && !product.paypalAvailable;
+    const active = method === checkoutPaymentMethod;
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-pressed', String(active));
+  });
+
+  if (checkoutPaymentMethod === 'paypal') {
+    if (paypalPaymentSession) {
+      checkoutSubmit.hidden = true;
+      paypalButton.hidden = false;
+    } else {
+      paypalButton.hidden = true;
+      checkoutSubmit.hidden = false;
+      checkoutSubmit.disabled = true;
+      checkoutSubmit.querySelector('span').textContent =
+        copy().strings['checkout.paypalLoading'];
+    }
+  } else {
+    paypalButton.hidden = true;
+    checkoutSubmit.hidden = false;
+    checkoutSubmit.disabled = false;
+    checkoutSubmit.querySelector('span').textContent =
+      copy().strings['checkout.generatePix'];
+  }
+}
+
+function setPaymentMethod(method) {
+  if (!['pix', 'paypal'].includes(method)) return;
+  if (method === 'paypal' && !product.paypalAvailable) return;
+  checkoutPaymentMethod = method;
+  checkoutError.hidden = true;
+  checkoutError.textContent = '';
+  renderPaymentMethod();
+  renderCheckoutSummary();
+}
+
+async function loadPayPalSdk() {
+  if (window.paypal?.createInstance) return;
+  if (paypalSdkPromise) return paypalSdkPromise;
+
+  paypalSdkPromise = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.dataset.paypalSdk = 'v6';
+    script.src = product.paypalEnvironment === 'live'
+      ? 'https://www.paypal.com/web-sdk/v6/core'
+      : 'https://www.sandbox.paypal.com/web-sdk/v6/core';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('PayPal SDK unavailable'));
+    document.head.appendChild(script);
+  });
+
+  return paypalSdkPromise;
+}
+
+async function ensurePayPalCheckout() {
+  if (
+    !product.paypalAvailable ||
+    !product.paypalClientId ||
+    paypalPaymentSession
+  ) return;
+
+  try {
+    await loadPayPalSdk();
+    const sdk = await window.paypal.createInstance({
+      clientId: product.paypalClientId,
+      components: ['paypal-payments'],
+      pageType: 'checkout'
+    });
+    const methods = await sdk.findEligibleMethods({
+      currencyCode: product.paypalCurrency
+    });
+
+    if (!methods.isEligible('paypal')) {
+      product.paypalAvailable = false;
+      renderPaymentMethod();
+      return;
+    }
+
+    paypalPaymentSession = sdk.createPayPalOneTimePaymentSession({
+      async onApprove(data) {
+        const purchaseId = activePurchase;
+        const generation = checkoutGeneration;
+
+        if (
+          !purchaseId ||
+          !activePayPalOrder ||
+          data.orderId !== activePayPalOrder ||
+          !isCurrentPurchase(purchaseId, generation)
+        ) return;
+
+        checkoutDialog.classList.add('pix-created');
+        pixPurchaseSummary.hidden = false;
+        pixResult.hidden = false;
+        document.querySelector('.pix-result-heading').hidden = true;
+        document.querySelector('.pix-instruction').hidden = true;
+        document.querySelector('.pix-code-row').hidden = true;
+        pixQr.hidden = true;
+        pixStatus.textContent = copy().strings['checkout.paypalLoading'];
+
+        try {
+          const response = await fetch(
+            `${licenseApiBase}/v1/checkout/paypal/${encodeURIComponent(purchaseId)}/capture`,
+            {
+              method: 'POST',
+              cache: 'no-store',
+              credentials: 'omit',
+              referrerPolicy: 'no-referrer',
+              headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ orderId: data.orderId })
+            }
+          );
+          const result = await response.json().catch(() => ({}));
+          if (!isCurrentPurchase(purchaseId, generation)) return;
+          if (!response.ok) throw result;
+
+          if (
+            result.licensed === true &&
+            typeof result.licenseKey === 'string' &&
+            result.licenseKey.trim()
+          ) {
+            if (await transitionToLicenseResult(
+              result.licenseKey.trim(),
+              purchaseId,
+              generation
+            )) {
+              void refreshProduct();
+            }
+            return;
+          }
+
+          pixStatus.textContent = message('checkoutPaymentPreparingLicense');
+          void pollPurchase(purchaseId, generation);
+        } catch (error) {
+          if (!isCurrentPurchase(purchaseId, generation)) return;
+          checkoutError.textContent = error instanceof Error
+            ? copy().strings['checkout.paypalError']
+            : checkoutErrorMessage(error, 'checkoutUnavailable');
+          checkoutError.hidden = false;
+        }
+      },
+      onCancel() {
+        if (!checkoutDialog.open) return;
+        checkoutError.textContent = copy().strings['checkout.paypalCancelled'];
+        checkoutError.hidden = false;
+      },
+      onError() {
+        if (!checkoutDialog.open) return;
+        checkoutError.textContent = copy().strings['checkout.paypalError'];
+        checkoutError.hidden = false;
+      }
+    });
+
+    renderPaymentMethod();
+  } catch {
+    product.paypalAvailable = false;
+    renderPaymentMethod();
+  }
+}
+
+async function createPayPalOrderForCheckout() {
+  const generation = checkoutGeneration;
+  const email = checkoutEmail.value.trim();
+
+  if (!checkoutEmail.checkValidity() || !email) {
+    checkoutError.textContent = message('checkoutInvalidEmail');
+    checkoutError.hidden = false;
+    checkoutEmail.focus();
+    throw new Error('Invalid email');
+  }
+
+  const plan = selectedPlan();
+  const couponCode = checkoutUsePublicCoupon.checked && publishedCoupon
+    ? publishedCoupon.code
+    : '';
+  const response = await fetch(`${licenseApiBase}/v1/checkout/paypal/create`, {
+    method: 'POST',
+    cache: 'no-store',
+    credentials: 'omit',
+    referrerPolicy: 'no-referrer',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      planId: plan.id,
+      ...(couponCode ? { couponCode } : {})
+    })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!isCurrentCheckout(generation)) throw new Error('Checkout closed');
+  if (!response.ok) throw data;
+
+  if (
+    typeof data.purchaseId !== 'string' ||
+    typeof data.orderId !== 'string'
+  ) {
+    throw new Error('Invalid PayPal checkout response');
+  }
+
+  activePurchase = data.purchaseId;
+  activePayPalOrder = data.orderId;
+  pixEmailSummary.textContent = email;
+
+  if (couponCode && publishedCoupon) {
+    pixCouponSummary.hidden = false;
+    pixCouponSummary.textContent =
+      `${publishedCoupon.code} · −${publishedCoupon.discountPercent}%`;
+  } else {
+    pixCouponSummary.hidden = true;
+    pixCouponSummary.textContent = '';
+  }
+
+  return { orderId: data.orderId };
+}
+
+paypalButton.addEventListener('click', async () => {
+  if (!paypalPaymentSession || checkoutPaymentMethod !== 'paypal') return;
+  checkoutError.hidden = true;
+  checkoutError.textContent = '';
+
+  try {
+    await paypalPaymentSession.start(
+      { presentationMode: 'auto' },
+      createPayPalOrderForCheckout()
+    );
+  } catch (error) {
+    if (!checkoutDialog.open) return;
+    checkoutError.textContent = error instanceof Error
+      ? copy().strings['checkout.paypalError']
+      : checkoutErrorMessage(error, 'checkoutUnavailable');
+    checkoutError.hidden = false;
+  }
+});
 
 function openCheckout() {
   resetCheckoutResult();
+  checkoutPaymentMethod = 'pix';
   checkoutUsePublicCoupon.checked = false;
   renderPublishedCoupon();
   renderCheckoutSummary();
+  renderPaymentMethod();
   checkoutDialog.showModal();
   window.setTimeout(() => checkoutEmail.focus(), 0);
 }
@@ -576,6 +849,13 @@ function closeCheckout() {
   invalidateCheckoutSession();
   checkoutDialog.close();
 }
+
+paymentMethodButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    if (checkoutDialog.classList.contains('pix-created')) return;
+    setPaymentMethod(button.dataset.paymentMethod);
+  });
+});
 
 checkoutUsePublicCoupon.addEventListener('change', () => {
   renderCheckoutSummary(true);
@@ -673,6 +953,7 @@ async function pollPurchase(purchaseId, generation = checkoutGeneration) {
 
 checkoutForm.addEventListener('submit', async event => {
   event.preventDefault();
+  if (checkoutPaymentMethod !== 'pix') return;
   resetCheckoutResult();
   const generation = checkoutGeneration;
 
@@ -732,7 +1013,7 @@ checkoutForm.addEventListener('submit', async event => {
       pixCouponSummary.hidden = true;
       pixCouponSummary.textContent = '';
     }
-    document.querySelector('[data-pix-amount]').textContent = formattedPrice(Number(data.amount));
+    document.querySelector('[data-pix-amount]').textContent = formatMoney(Number(data.amount), product.currency);
 
     if (qrBase64) {
       pixQr.src = qrBase64.startsWith('data:') ? qrBase64 : `data:image/jpeg;base64,${qrBase64}`;
@@ -742,7 +1023,7 @@ checkoutForm.addEventListener('submit', async event => {
     pixCode.textContent = qrCode;
     document.querySelector('.pix-code-row').hidden = !qrCode;
     pixStatus.textContent = message('checkoutCreated', {
-      amount: formattedPrice(Number(data.amount))
+      amount: formatMoney(Number(data.amount), product.currency)
     });
     if (await transitionToPixResult(generation)) {
       void pollPurchase(data.purchaseId, generation);
@@ -768,6 +1049,10 @@ function renderProduct() {
   document.querySelectorAll('[data-plan-price]').forEach(item => {
     item.textContent = formattedPrice(product.plans.find(option => option.devices === Number(item.dataset.planPrice)).price);
   });
+  document.querySelectorAll('[data-plan-price-usd]').forEach(item => {
+    const plan = product.plans.find(option => option.devices === Number(item.dataset.planPriceUsd));
+    item.textContent = formatMoney(plan.priceUSD, product.paypalCurrency);
+  });
   document.querySelectorAll('[data-checkout]').forEach(button => {
     button.disabled = !plan.checkoutAvailable;
     button.setAttribute('aria-disabled', String(!plan.checkoutAvailable));
@@ -791,6 +1076,7 @@ function renderProduct() {
     salesCounter.hidden = true;
   }
   renderPublishedCoupon();
+  renderPaymentMethod();
   if (checkoutDialog.open) renderCheckoutSummary();
   if (dialog.open) updateDialog();
 }
@@ -810,7 +1096,7 @@ function validPublicCoupon(value) {
 
 async function refreshProduct() {
   try {
-    const [plansResponse, couponsResponse, statsResponse] = await Promise.all([
+    const [plansResponse, couponsResponse, statsResponse, paypalResponse] = await Promise.all([
       fetch(`${licenseApiBase}/v1/plans`, {
         signal: AbortSignal.timeout(8000),
         cache: 'no-store',
@@ -831,6 +1117,13 @@ async function refreshProduct() {
         credentials: 'omit',
         referrerPolicy: 'no-referrer',
         headers: { Accept: 'application/json' }
+      }).catch(() => null),
+      fetch(`${licenseApiBase}/v1/paypal/config`, {
+        signal: AbortSignal.timeout(8000),
+        cache: 'no-store',
+        credentials: 'omit',
+        referrerPolicy: 'no-referrer',
+        headers: { Accept: 'application/json' }
       }).catch(() => null)
     ]);
 
@@ -839,6 +1132,8 @@ async function refreshProduct() {
     if (
       typeof plansData.currency !== 'string' ||
       !/^[A-Z]{3}$/.test(plansData.currency) ||
+      typeof plansData.paypalCurrency !== 'string' ||
+      !/^[A-Z]{3}$/.test(plansData.paypalCurrency) ||
       !Array.isArray(plansData.plans)
     ) throw new Error('Invalid plans');
 
@@ -847,6 +1142,7 @@ async function refreshProduct() {
         id: plan?.id,
         devices: plan?.maxDevices,
         price: Number(plan?.priceBRL),
+        priceUSD: Number(plan?.priceUSD),
         checkoutAvailable: true
       }))
       .filter(plan =>
@@ -855,7 +1151,9 @@ async function refreshProduct() {
         plan.devices >= 1 &&
         plan.devices <= 3 &&
         Number.isFinite(plan.price) &&
-        plan.price > 0
+        plan.price > 0 &&
+        Number.isFinite(plan.priceUSD) &&
+        plan.priceUSD > 0
       )
       .sort((a, b) => a.devices - b.devices);
 
@@ -882,14 +1180,30 @@ async function refreshProduct() {
       }
     }
 
+    const paypalData = paypalResponse?.ok
+      ? await paypalResponse.json().catch(() => null)
+      : null;
+    const paypalAvailable = Boolean(
+      paypalData &&
+      paypalData.available === true &&
+      typeof paypalData.clientId === 'string' &&
+      paypalData.clientId.trim() &&
+      ['sandbox', 'live'].includes(paypalData.environment)
+    );
+
     product = {
       downloadAvailable: directDownloadAvailable,
       price: plans[0].price,
       currency: plansData.currency,
+      paypalCurrency: plansData.paypalCurrency,
       checkoutAvailable: true,
+      paypalAvailable,
+      paypalClientId: paypalAvailable ? paypalData.clientId.trim() : null,
+      paypalEnvironment: paypalAvailable ? paypalData.environment : 'sandbox',
       plans
     };
     publishedCoupon = nextCoupon;
+    if (paypalAvailable) void ensurePayPalCheckout();
   } catch {
     product = {
       ...product,
