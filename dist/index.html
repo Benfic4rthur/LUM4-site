@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0c0d0f" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self'; style-src-attr 'none'; script-src 'self'; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app https://api.github.com" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://*.paypal.com; form-action 'none'; img-src 'self' data: https://*.paypal.com https://*.paypalobjects.com; style-src 'self' https://*.paypal.com; style-src-attr 'none'; script-src 'self' https://*.paypal.com; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app https://api.github.com https://*.paypal.com" />
     <meta name="referrer" content="no-referrer" />
     <meta name="description" data-i18n-content="meta.description" content="LUM4 by ALLM4. Boost XDR nativo para macOS, com controle simples e IA local que aprende suas preferências. Para Macs Apple Silicon com tela XDR integrada." />
     <meta property="og:title" data-i18n-content="meta.title" content="LUM4 — Mais luz para o que importa." />
@@ -34,9 +34,9 @@
     <link rel="icon" type="image/png" sizes="256x256" href="/assets/lum4-favicon-256-v4.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v4.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=purchase1" />
-    <script src="/locales.js?v=purchase1" defer></script>
-    <script src="/app.js?v=trial1" defer></script>
+    <link rel="stylesheet" href="/styles.css?v=paypal1" />
+    <script src="/locales.js?v=paypal1" defer></script>
+    <script src="/app.js?v=paypal1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
@@ -223,9 +223,9 @@
           <div class="purchase-card-heading"><span data-i18n="purchase.license">Licença LUM4</span><span class="purchase-availability" data-sale-status>Para macOS</span></div>
           <fieldset class="license-plans">
             <legend class="sr-only" data-i18n="purchase.choosePlan">Escolha quantos Macs deseja licenciar</legend>
-            <label class="license-option"><input type="radio" name="license-plan" value="1" checked><span class="plan-choice"><strong data-i18n="purchase.planOne">1 Mac</strong><span data-plan-price="1">R$ 14,99</span></span></label>
-            <label class="license-option"><input type="radio" name="license-plan" value="2"><span class="plan-choice"><strong data-i18n="purchase.planTwo">2 Macs</strong><span data-plan-price="2">R$ 23,99</span></span></label>
-            <label class="license-option"><input type="radio" name="license-plan" value="3"><span class="plan-choice"><span class="plan-savings-badge" data-plan-savings-badge>−33%</span><strong data-i18n="purchase.planThree">3 Macs</strong><span data-plan-price="3">R$ 29,99</span></span></label>
+            <label class="license-option"><input type="radio" name="license-plan" value="1" checked><span class="plan-choice"><strong data-i18n="purchase.planOne">1 Mac</strong><span class="plan-prices"><span data-plan-price="1">R$ 14,99</span><small><span data-plan-price-usd="1">US$ 9.99</span> <span data-i18n="purchase.paypalPrice">no PayPal</span></small></span></span></label>
+            <label class="license-option"><input type="radio" name="license-plan" value="2"><span class="plan-choice"><strong data-i18n="purchase.planTwo">2 Macs</strong><span class="plan-prices"><span data-plan-price="2">R$ 23,99</span><small><span data-plan-price-usd="2">US$ 17.99</span> <span data-i18n="purchase.paypalPrice">no PayPal</span></small></span></span></label>
+            <label class="license-option"><input type="radio" name="license-plan" value="3"><span class="plan-choice"><span class="plan-savings-badge" data-plan-savings-badge>−33%</span><strong data-i18n="purchase.planThree">3 Macs</strong><span class="plan-prices"><span data-plan-price="3">R$ 29,99</span><small><span data-plan-price-usd="3">US$ 23.99</span> <span data-i18n="purchase.paypalPrice">no PayPal</span></small></span></span></label>
           </fieldset>
           <p class="price-caption plan-savings-copy" data-plan-savings-copy>Pacote de 3 Macs: economize R$ 14,98.</p>
           <p class="plan-savings-basis" data-plan-savings-basis data-i18n="purchase.savingsBasis">Em relação a 3 licenças individuais.</p>
@@ -266,8 +266,21 @@
         <p class="eyebrow">LUM4 by ALLM4</p>
       </div>
       <h2 id="checkout-title" data-i18n="checkout.title">Comprar LUM4</h2>
-      <p id="checkout-help" data-i18n="checkout.help">Informe seu e-mail para gerar o Pix. Após a confirmação do pagamento, sua licença será enviada automaticamente.</p>
+      <p id="checkout-help" data-i18n="checkout.help">Escolha Pix ou PayPal. Após a confirmação do pagamento, sua licença será enviada automaticamente.</p>
       <form id="checkout-form" class="checkout-form" novalidate>
+        <fieldset class="payment-methods">
+          <legend data-i18n="checkout.paymentMethod">Forma de pagamento</legend>
+          <div class="payment-method-grid">
+            <button type="button" class="payment-method active" data-payment-method="pix" aria-pressed="true">
+              <span><strong>Pix</strong><small data-i18n="checkout.pixCurrency">Pagamento em reais</small></span>
+              <span class="payment-method-check" aria-hidden="true">✓</span>
+            </button>
+            <button type="button" class="payment-method" data-payment-method="paypal" aria-pressed="false" disabled>
+              <span><strong>PayPal</strong><small data-i18n="checkout.paypalCurrency">Pagamento em dólares</small></span>
+              <span class="payment-method-check" aria-hidden="true">✓</span>
+            </button>
+          </div>
+        </fieldset>
         <div class="checkout-summary">
           <span data-i18n="checkout.selectedPlan">Plano selecionado</span>
           <div class="checkout-plan-switch" role="group" aria-label="Escolha o plano" data-i18n-aria-label="purchase.choosePlan">
@@ -301,6 +314,7 @@
           <span data-i18n="checkout.generatePix">Gerar Pix</span>
           <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg>
         </button>
+        <paypal-button id="paypal-button" type="pay" hidden></paypal-button>
       </form>
       <div class="pix-purchase-summary" data-pix-purchase-summary hidden>
         <span data-pix-email-summary></span>
