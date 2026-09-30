@@ -6,7 +6,7 @@ import vm from 'node:vm';
 // Exercise the production checkout code with a small DOM and synthetic fetches.
 // No request is sent to the license service and no purchase is created.
 const source = await readFile(new URL('../dist/app.js', import.meta.url), 'utf8');
-const start = source.indexOf('let purchasePollTimer = null;');
+const start = source.indexOf('function checkoutCurrency()');
 const end = source.indexOf('\nfunction renderProduct()', start);
 assert.ok(start >= 0 && end > start, 'Checkout region must be present');
 const checkoutSource = source.slice(start, end);
@@ -63,6 +63,7 @@ function fixture() {
   }
 
   const namedElements = {
+    dialog: '#availability-dialog',
     checkoutDialog: '#checkout-dialog', checkoutForm: '#checkout-form',
     checkoutEmail: '#checkout-email', checkoutUsePublicCoupon: '#checkout-use-public-coupon',
     checkoutPublicCoupon: '[data-checkout-public-coupon]',
@@ -118,10 +119,8 @@ function fixture() {
       'checkout.paypalCancelled': 'PayPal cancelled'
     } }),
     formattedPrice: value => String(value),
-    formatMoney: value => String(value),
-    checkoutCurrency: () => 'BRL',
-    checkoutBasePrice: plan => plan.price,
-    formattedCheckoutPrice: value => String(value),
+    formatMoney: (value, currency) =>
+      `${currency}:${Number(value).toFixed(2)}`,
     renderProduct() {}, refreshProduct: async () => {},
     product: {
       currency: 'BRL',
@@ -136,6 +135,7 @@ function fixture() {
     let activePurchase = null;
     let activePayPalOrder = null;
     let publishedCoupon = null;
+    let availabilityType = 'download';
     let selectedDevices = 1;
     let checkoutPaymentMethod = 'pix';
     let paypalPaymentSession = null;
@@ -258,4 +258,301 @@ test('Escape cancels an in-flight checkout without suppressing native dialog clo
   f.requests[0].resolve(checkoutResponse('escaped'));
   await submitted;
   assert.equal(f.element('#pix-code').textContent, '');
+});
+
+
+test('PayPal selection switches checkout to USD and the same coupon percentage', () => {
+  const f = fixture();
+  f.run(`
+    product.paypalAvailable = true;
+    paypalPaymentSession = {};
+    publishedCoupon = {
+      code: 'LANCAMENTO10',
+      discountPercent: 10
+    };
+    checkoutUsePublicCoupon.checked = true;
+    setPaymentMethod('paypal');
+    renderCheckoutSummary();
+  `);
+
+  assert.equal(f.run('checkoutPaymentMethod'), 'paypal');
+  assert.equal(
+    f.element('[data-checkout-price]').textContent,
+    'USD:8.99'
+  );
+  assert.equal(
+    f.element('[data-checkout-original-price]').textContent,
+    'USD:9.99'
+  );
+  assert.equal(
+    f.element('[data-checkout-discount-badge]').textContent,
+    '−10%'
+  );
+
+  f.run(`
+    setPaymentMethod('pix');
+    renderCheckoutSummary();
+  `);
+
+  assert.equal(
+    f.element('[data-checkout-price]').textContent,
+    'BRL:13.49'
+  );
+  assert.equal(
+    f.element('[data-checkout-original-price]').textContent,
+    'BRL:14.99'
+  );
+});
+
+test('PayPal order creation uses the selected plan and public coupon', async () => {
+  const f = fixture();
+  f.run(`
+    product.paypalAvailable = true;
+    paypalPaymentSession = {};
+    publishedCoupon = {
+      code: 'LANCAMENTO10',
+      discountPercent: 10
+    };
+    checkoutUsePublicCoupon.checked = true;
+    setPaymentMethod('paypal');
+  `);
+
+  const creation = f.run('createPayPalOrderForCheckout()');
+  assert.equal(f.requests.length, 1);
+  assert.equal(
+    f.requests[0].url,
+    'https://audit.invalid/v1/checkout/paypal/create'
+  );
+  assert.deepEqual(
+    JSON.parse(f.requests[0].options.body),
+    {
+      email: 'audit-a@example.invalid',
+      planId: 'synthetic-plan',
+      couponCode: 'LANCAMENTO10'
+    }
+  );
+
+  f.requests[0].resolve({
+    ok: true,
+    json: async () => ({
+      purchaseId: 'paypal-purchase',
+      orderId: 'PAYPAL-ORDER',
+      amount: '8.99',
+      currency: 'USD'
+    })
+  });
+
+  assert.equal(await creation, 'PAYPAL-ORDER');
+  assert.equal(f.run('activePurchase'), 'paypal-purchase');
+  assert.equal(f.run('activePayPalOrder'), 'PAYPAL-ORDER');
+  assert.equal(
+    f.element('[data-pix-coupon-summary]').textContent,
+    'LANCAMENTO10 · −10%'
+  );
+});
+
+test('PayPal approval captures on the server and reveals the license', async () => {
+  const f = fixture();
+
+  f.run(`
+    product.paypalAvailable = true;
+    product.paypalClientId = 'public-client-id';
+    product.paypalEnvironment = 'live';
+    window.paypal = {
+      createInstance: async (options) => {
+        window.__paypalInstanceOptions = options;
+        return {
+          findEligibleMethods: async (options) => {
+            window.__paypalEligibilityOptions = options;
+            return { isEligible: method => method === 'paypal' };
+          },
+          createPayPalOneTimePaymentSession: async handlers => {
+            window.__paypalHandlers = handlers;
+            return {
+              start: async (options, orderPromise) => {
+                window.__paypalStartOptions = options;
+                window.__paypalOrderId = await orderPromise;
+              }
+            };
+          }
+        };
+      }
+    };
+  `);
+
+  await f.run('ensurePayPalCheckout()');
+  f.run("setPaymentMethod('paypal')");
+
+  assert.equal(
+    f.run('window.__paypalInstanceOptions.clientId'),
+    'public-client-id'
+  );
+  assert.equal(
+    f.run('window.__paypalEligibilityOptions.currencyCode'),
+    'USD'
+  );
+
+  const click = f.element('#paypal-button').emit('click');
+  assert.equal(f.requests.length, 1);
+
+  f.requests[0].resolve({
+    ok: true,
+    json: async () => ({
+      purchaseId: 'paypal-approved',
+      orderId: 'ORDER-APPROVED',
+      amount: '9.99',
+      currency: 'USD'
+    })
+  });
+  await click;
+
+  assert.equal(
+    f.run('window.__paypalOrderId'),
+    'ORDER-APPROVED'
+  );
+  assert.equal(
+    f.run('window.__paypalStartOptions.presentationMode'),
+    'auto'
+  );
+
+  const approval = f.run(
+    "window.__paypalHandlers.onApprove({ orderId: 'ORDER-APPROVED' })"
+  );
+
+  assert.equal(f.requests.length, 2);
+  assert.equal(
+    f.requests[1].url,
+    'https://audit.invalid/v1/checkout/paypal/paypal-approved/capture'
+  );
+  assert.deepEqual(
+    JSON.parse(f.requests[1].options.body),
+    { orderId: 'ORDER-APPROVED' }
+  );
+
+  f.requests[1].resolve({
+    ok: true,
+    json: async () => ({
+      licensed: true,
+      licenseKey: 'LUM4-PAYPAL-LICENSE'
+    })
+  });
+
+  await approval;
+  assert.equal(
+    f.element('#license-key').textContent,
+    'LUM4-PAYPAL-LICENSE'
+  );
+  assert.equal(
+    f.element('[data-license-result]').hidden,
+    false
+  );
+});
+
+test('PayPal cancellation releases the pending purchase and keeps Pix usable', async () => {
+  const f = fixture();
+
+  f.run(`
+    product.paypalAvailable = true;
+    product.paypalClientId = 'public-client-id';
+    window.paypal = {
+      createInstance: async () => ({
+        findEligibleMethods: async () => ({
+          isEligible: method => method === 'paypal'
+        }),
+        createPayPalOneTimePaymentSession: async handlers => {
+          window.__paypalHandlers = handlers;
+          return { start: async () => {} };
+        }
+      })
+    };
+  `);
+
+  await f.run('ensurePayPalCheckout()');
+  f.run(`
+    setPaymentMethod('paypal');
+    activePurchase = 'cancel-purchase';
+    activePayPalOrder = 'CANCEL-ORDER';
+    window.__paypalHandlers.onCancel();
+  `);
+
+  assert.equal(f.run('activePurchase'), null);
+  assert.equal(f.run('activePayPalOrder'), null);
+  assert.equal(
+    f.element('#checkout-error').textContent,
+    'PayPal cancelled'
+  );
+  assert.equal(f.requests.length, 1);
+  assert.equal(
+    f.requests[0].url,
+    'https://audit.invalid/v1/checkout/paypal/cancel-purchase/cancel'
+  );
+  assert.deepEqual(
+    JSON.parse(f.requests[0].options.body),
+    { orderId: 'CANCEL-ORDER' }
+  );
+
+  f.requests[0].resolve({
+    ok: true,
+    json: async () => ({ canceled: true })
+  });
+  await new Promise(resolve => setImmediate(resolve));
+
+  f.run("setPaymentMethod('pix')");
+  assert.equal(f.run('checkoutPaymentMethod'), 'pix');
+  assert.equal(f.element('#checkout-submit').disabled, false);
+});
+
+test('PayPal ineligibility falls back to Pix without disabling checkout', async () => {
+  const f = fixture();
+
+  f.run(`
+    product.paypalAvailable = true;
+    product.paypalClientId = 'public-client-id';
+    checkoutPaymentMethod = 'paypal';
+    window.paypal = {
+      createInstance: async () => ({
+        findEligibleMethods: async () => ({
+          isEligible: () => false
+        }),
+        createPayPalOneTimePaymentSession: async () => {
+          throw new Error('must not create a session');
+        }
+      })
+    };
+  `);
+
+  await f.run('ensurePayPalCheckout()');
+
+  assert.equal(f.run('product.paypalAvailable'), false);
+  assert.equal(f.run('checkoutPaymentMethod'), 'pix');
+  assert.equal(f.element('#checkout-submit').disabled, false);
+  assert.equal(
+    f.element('[data-checkout-price]').textContent,
+    'BRL:14.99'
+  );
+});
+
+test('PayPal terminal failure stops polling instead of looping forever', async () => {
+  const f = fixture();
+
+  f.run("activePurchase = 'paypal-failed'");
+  const poll = f.run(
+    "pollPurchase('paypal-failed', checkoutGeneration)"
+  );
+
+  assert.equal(f.requests.length, 1);
+  f.requests[0].resolve({
+    ok: true,
+    json: async () => ({
+      licensed: false,
+      status: 'failed'
+    })
+  });
+
+  await poll;
+  assert.equal(
+    f.element('#pix-status').textContent,
+    'checkoutPaymentFailed'
+  );
+  assert.equal(f.timers.size, 0);
 });
