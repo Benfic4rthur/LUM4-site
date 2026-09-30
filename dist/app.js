@@ -636,7 +636,7 @@ async function loadPayPalSdk() {
   if (window.paypal?.createInstance) return;
   if (paypalSdkPromise) return paypalSdkPromise;
 
-  paypalSdkPromise = new Promise((resolve, reject) => {
+  const pending = new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.dataset.paypalSdk = 'v6';
     script.src = product.paypalEnvironment === 'live'
@@ -647,7 +647,14 @@ async function loadPayPalSdk() {
     document.head.appendChild(script);
   });
 
-  return paypalSdkPromise;
+  paypalSdkPromise = pending;
+
+  try {
+    await pending;
+  } catch (error) {
+    if (paypalSdkPromise === pending) paypalSdkPromise = null;
+    throw error;
+  }
 }
 
 async function ensurePayPalCheckout() {
@@ -670,7 +677,10 @@ async function ensurePayPalCheckout() {
 
     if (!methods.isEligible('paypal')) {
       product.paypalAvailable = false;
+      paypalPaymentSession = null;
+      if (checkoutPaymentMethod === 'paypal') checkoutPaymentMethod = 'pix';
       renderPaymentMethod();
+      if (checkoutDialog.open) renderCheckoutSummary();
       return;
     }
 
@@ -754,7 +764,10 @@ async function ensurePayPalCheckout() {
     renderPaymentMethod();
   } catch {
     product.paypalAvailable = false;
+    paypalPaymentSession = null;
+    if (checkoutPaymentMethod === 'paypal') checkoutPaymentMethod = 'pix';
     renderPaymentMethod();
+    if (checkoutDialog.open) renderCheckoutSummary();
   }
 }
 
