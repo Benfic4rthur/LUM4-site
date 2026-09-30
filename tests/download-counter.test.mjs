@@ -8,7 +8,7 @@ const start = app.indexOf('// GitHub download totals have their own state');
 const end = app.indexOf('function translateStatic()', start);
 assert.ok(start >= 0 && end > start, 'Download counter integration block must exist.');
 const block = app.slice(start, end);
-const ttl = 5 * 60 * 1000;
+const ttl = 60 * 1000;
 const initialTime = 1_800_000_000_000;
 
 function harness({ cache = null, readBlocked = false, writeBlocked = false, locale = 'pt-BR' } = {}) {
