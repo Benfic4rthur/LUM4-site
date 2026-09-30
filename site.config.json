@@ -1,7 +1,7 @@
 {
   "price": 14.99,
   "currency": "BRL",
-  "downloadUrl": null,
+  "downloadUrl": "https://github.com/Benfic4rthur/LUM4-Releases/releases/latest/download/LUM4-macOS-arm64.dmg",
   "checkoutUrl": null,
   "plans": [
     { "devices": 1, "price": 14.99, "checkoutUrl": null },

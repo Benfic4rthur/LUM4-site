@@ -112,7 +112,7 @@ window.LUM4_LOCALES = {
       'footer.platform': 'Feito para macOS.',
       'dialog.close': 'Fechar',
       'dialog.done': 'Entendi',
-      'noscript': 'Ative o JavaScript para experimentar a prévia e consultar a disponibilidade do download e da compra.'
+      'noscript': 'Você pode baixar o LUM4 pelo botão acima. Ative o JavaScript para experimentar a prévia e consultar a compra.'
     },
     scenes: [
       { alt: 'Sol dourado no horizonte sobre as ondas de um oceano azul.', name: 'Amanhecer' },
@@ -298,7 +298,7 @@ window.LUM4_LOCALES = {
       'footer.platform': 'Made for macOS.',
       'dialog.close': 'Close',
       'dialog.done': 'Got it',
-      'noscript': 'Enable JavaScript to try the preview and check download and purchase availability.'
+      'noscript': 'You can download LUM4 using the button above. Enable JavaScript to try the preview and view purchase options.'
     },
     scenes: [
       { alt: 'Golden sunlight on the horizon above the waves of a blue ocean.', name: 'Sunrise' },
@@ -484,7 +484,7 @@ window.LUM4_LOCALES = {
       'footer.platform': 'Hecho para macOS.',
       'dialog.close': 'Cerrar',
       'dialog.done': 'Entendido',
-      'noscript': 'Activa JavaScript para probar la vista previa y consultar la disponibilidad de la descarga y la compra.'
+      'noscript': 'Puedes descargar LUM4 con el botón de arriba. Activa JavaScript para probar la vista previa y consultar la compra.'
     },
     scenes: [
       { alt: 'Luz dorada en el horizonte sobre las olas de un océano azul.', name: 'Amanecer' },

@@ -32,7 +32,9 @@ const salesLabel = document.querySelector('[data-sales-label]');
 const demoSalesBoost = 125;
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 const staticHosting = document.documentElement.dataset.hosting === 'static';
-let product = { downloadAvailable: false, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
+// The public download link works independently of product and checkout requests.
+const directDownloadAvailable = Boolean(document.querySelector('[data-download][href^="https://"]'));
+let product = { downloadAvailable: directDownloadAvailable, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
 let publishedCoupon = null;
 let salesCount = 0;
 let activePurchase = null;
@@ -194,9 +196,6 @@ function showAvailability(type) {
   updateDialog();
   dialog.showModal();
 }
-document.querySelectorAll('[data-download]').forEach(link => link.addEventListener('click', event => {
-  if (!product.downloadAvailable) { event.preventDefault(); showAvailability('download'); }
-}));
 document.querySelectorAll('[data-checkout]').forEach(button => button.addEventListener('click', () => {
   if (!selectedPlan().checkoutAvailable) {
     showAvailability('checkout');
@@ -650,7 +649,7 @@ function renderProduct() {
   document.querySelector('[data-plan-savings-basis]').hidden = savings === 0;
   document.querySelector('[data-download-count]').textContent = productUnavailable || product.downloads === null ? '—' : new Intl.NumberFormat(copy().locale).format(product.downloads);
   document.querySelector('[data-download-unit]').textContent = message(productLoaded && product.downloads === 1 ? 'downloadOne' : 'downloadOther');
-  document.querySelector('[data-release-status]').textContent = message(productUnavailable ? 'downloadUnavailable' : product.downloadAvailable ? 'downloadReady' : 'downloadSoon');
+  document.querySelector('[data-release-status]').textContent = message(product.downloadAvailable ? 'downloadReady' : productUnavailable ? 'downloadUnavailable' : 'downloadSoon');
   document.querySelector('[data-sale-status]').textContent = message(plan.checkoutAvailable ? 'saleReady' : 'saleSoon');
   document.querySelector('[data-checkout-note]').textContent = message(plan.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon', { devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
   if (Number.isSafeInteger(salesCount) && salesCount >= 0) {
@@ -697,14 +696,6 @@ async function refreshProduct() {
         validCount
       ) {
         downloadData = data;
-        if (staticHosting && data.downloadAvailable && typeof data.downloadUrl === 'string') {
-          const target = new URL(data.downloadUrl);
-          if (target.protocol === 'https:' && !target.username && !target.password) {
-            document.querySelectorAll('[data-download]').forEach(link => {
-              link.href = target.href;
-            });
-          }
-        }
       }
     }
   } catch {
@@ -785,7 +776,7 @@ async function refreshProduct() {
     }
 
     product = {
-      downloadAvailable: Boolean(downloadData?.downloadAvailable),
+      downloadAvailable: directDownloadAvailable,
       downloads: downloadData?.downloads ?? (staticHosting ? null : 0),
       price: plans[0].price,
       currency: plansData.currency,
@@ -799,7 +790,7 @@ async function refreshProduct() {
     productUnavailable = true;
     product = {
       ...product,
-      downloadAvailable: Boolean(downloadData?.downloadAvailable),
+      downloadAvailable: directDownloadAvailable,
       downloads: downloadData?.downloads ?? (staticHosting ? null : 0),
       checkoutAvailable: false,
       plans: product.plans.map(plan => ({ ...plan, checkoutAvailable: false }))

@@ -23,7 +23,7 @@ async function getConfig() {
   return {
     price: plans[0].price,
     currency: /^[A-Z]{3}$/.test(config.currency) ? config.currency : 'BRL',
-    downloadUrl: validUrl(process.env.LUM4_DOWNLOAD_URL || config.downloadUrl),
+    downloadUrl: validUrl(config.downloadUrl),
     checkoutUrl: plans[0].checkoutUrl,
     plans
   };
