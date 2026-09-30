@@ -850,7 +850,7 @@ if (!motionPreference.matches) {
       if (event.target === element) element.classList.remove('page-entrance');
     });
   });
-  const sections = [...document.querySelectorAll('.hero-visual, .qualities > div, .section-intro, .mode-details, .display-care, .purchase-copy, .purchase-card, .site-footer > *')];
+  const sections = [...document.querySelectorAll('.hero-visual, .qualities > div, .turbo-card, .section-intro, .mode-details, .display-care, .purchase-copy, .purchase-card, .site-footer > *')];
   const observer = 'IntersectionObserver' in window ? new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;

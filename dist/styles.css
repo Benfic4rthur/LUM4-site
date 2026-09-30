@@ -317,6 +317,40 @@ h1,h2,h3,.price{overflow-wrap:anywhere}
 }
 
 
+/* Extra brightness, with an illustrative scale rather than a luminance claim. */
+.turbo-section{padding-top:88px}
+.turbo-card{display:grid;grid-template-columns:1.1fr 1fr;gap:52px 80px;padding:56px;border:1px solid #ffb66c30;border-radius:28px;background:radial-gradient(ellipse at 82% 18%,#ffad511a,transparent 56%),linear-gradient(135deg,#191a1d,#101114);box-shadow:0 24px 70px #00000018}
+.turbo-copy{align-self:center;min-width:0}
+.turbo-copy .eyebrow{display:flex;align-items:center;gap:10px;font-size:.875rem;letter-spacing:1.6px;margin-bottom:22px}
+.turbo-copy .eyebrow .icon{width:19px;height:19px}
+.turbo-copy h2{font-size:clamp(2.5rem,4.1vw,3.5rem);font-weight:580;letter-spacing:-.045em;line-height:1.1;margin-bottom:24px}
+.turbo-copy h2 span{color:var(--accent-bright)}
+.turbo-description{max-width:450px;color:#b6b7bd;font-size:1rem;line-height:1.8;margin:0}
+.turbo-app-name{display:flex;align-items:flex-start;gap:9px;margin:24px 0 0;color:#d9b894;font-size:.875rem;line-height:1.65}
+.turbo-app-name .icon{width:17px;height:17px;margin-top:3px}
+.turbo-scale{min-width:0}
+.turbo-metric{display:flex;flex-direction:column;align-items:flex-start;margin:0 0 28px}
+.turbo-metric>span:first-child{color:#e9c39d;font-size:1rem}
+.turbo-metric strong{display:block;color:#ffd5a3;font-size:clamp(6rem,10vw,9rem);font-weight:620;letter-spacing:-.07em;line-height:1.15;text-shadow:0 0 60px #ffb66c22}
+.turbo-metric>span:last-child{color:#b6b7bd;font-size:.875rem;line-height:1.6}
+.turbo-comparison{display:grid;gap:16px}
+.turbo-level>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:7px;color:#adaeb5;font-size:.875rem}
+.turbo-level>div:first-child>span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums}
+.turbo-track{height:6px;border-radius:6px;background:#ffffff0b;overflow:hidden}
+.turbo-track>span{display:block;height:100%;border-radius:inherit}
+.turbo-level-standard .turbo-track>span{width:31.25%;background:#686b74}
+.turbo-level-regular .turbo-track>span{width:78.125%;background:#b68c63}
+.turbo-level-extra>div:first-child{color:#ffdbb0;font-weight:600}
+.turbo-level-extra .turbo-track>span{width:100%;background:linear-gradient(90deg,#e79445,#ffdbac)}
+.turbo-scale-note{color:#979ba4;font-size:.8125rem;line-height:1.6;margin:15px 0 0}
+.turbo-details{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:34px;padding-top:32px;border-top:1px solid #ffb66c1c}
+.turbo-details .icon{width:21px;height:21px;color:#f2c698;margin-bottom:11px}
+.turbo-details h3{font-size:1rem;font-weight:570;letter-spacing:-.2px;margin:0 0 9px;color:#eee9e3}
+.turbo-details p{margin:0;color:#a5a7ad;font-size:.875rem;line-height:1.75}
+@media(max-width:1180px){.turbo-card{gap:40px 44px;padding:40px}.turbo-details{gap:24px}}
+@media(max-width:900px){.turbo-section{padding-top:64px}.turbo-card{grid-template-columns:1fr;gap:32px;padding:36px}.turbo-copy h2{font-size:3rem}.turbo-description{max-width:570px}.turbo-app-name{margin-top:18px}.turbo-scale{display:grid;grid-template-columns:.8fr 1fr;gap:16px 32px;align-items:center}.turbo-metric{margin:0;grid-row:1/3}.turbo-metric strong{font-size:6rem}.turbo-scale-note{margin:0}.turbo-details{gap:22px;padding-top:28px}}
+@media(max-width:640px){.turbo-section{padding-top:48px}.turbo-card{padding:28px 24px;border-radius:20px;gap:28px}.turbo-copy .eyebrow{margin-bottom:18px}.turbo-copy h2{font-size:2.5rem;margin-bottom:20px}.turbo-description{line-height:1.75}.turbo-scale{grid-template-columns:1fr;gap:20px}.turbo-metric{grid-row:auto}.turbo-metric strong{font-size:6.5rem}.turbo-details{grid-template-columns:1fr;gap:24px;padding-top:26px}.turbo-details>div{display:grid;grid-template-columns:22px 1fr;gap:0 13px}.turbo-details .icon{grid-row:1/3;margin-top:2px;margin-bottom:0}.turbo-details h3{margin-bottom:6px}.turbo-details p{grid-column:2}.turbo-scale-note{font-size:.8125rem}}
+
 /* Quiet sales metadata in the footer. */
 .footer-meta{
   display:flex;
