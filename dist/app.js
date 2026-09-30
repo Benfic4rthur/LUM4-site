@@ -60,7 +60,7 @@ function message(key, values = {}) {
 
 // GitHub download totals have their own state; checkout availability never changes them.
 const downloadCacheKey = 'lum4-release-downloads-v1';
-const downloadCacheTtl = 5 * 60 * 1000;
+const downloadCacheTtl = 60 * 1000;
 let downloadsTotal = null;
 let downloadsFetchedAt = 0;
 let downloadsLastAttempt = 0;
