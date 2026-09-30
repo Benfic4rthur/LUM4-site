@@ -674,7 +674,7 @@ async function ensurePayPalCheckout() {
       return;
     }
 
-    paypalPaymentSession = sdk.createPayPalOneTimePaymentSession({
+    paypalPaymentSession = await sdk.createPayPalOneTimePaymentSession({
       async onApprove(data) {
         const purchaseId = activePurchase;
         const generation = checkoutGeneration;
@@ -812,7 +812,7 @@ async function createPayPalOrderForCheckout() {
     pixCouponSummary.textContent = '';
   }
 
-  return { orderId: data.orderId };
+  return data.orderId;
 }
 
 paypalButton.addEventListener('click', async () => {
