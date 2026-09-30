@@ -751,6 +751,8 @@ async function ensurePayPalCheckout() {
       },
       onCancel() {
         if (!checkoutDialog.open) return;
+        activePurchase = null;
+        activePayPalOrder = null;
         checkoutError.textContent = copy().strings['checkout.paypalCancelled'];
         checkoutError.hidden = false;
       },
@@ -948,7 +950,7 @@ async function pollPurchase(purchaseId, generation = checkoutGeneration) {
     if (data.status === 'processed' && data.statusDetail === 'accredited') {
       pixStatus.textContent = message('checkoutPaymentPreparingLicense');
     }
-    if (['expired', 'canceled', 'cancelled', 'refunded', 'create_failed'].includes(data.status)) {
+    if (['expired', 'canceled', 'cancelled', 'refunded', 'failed', 'voided', 'create_failed'].includes(data.status)) {
       pixStatus.textContent = message('checkoutPaymentFailed');
       return;
     }
