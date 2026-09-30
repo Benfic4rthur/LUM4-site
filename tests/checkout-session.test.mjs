@@ -170,6 +170,50 @@ function checkoutResponse(id) {
   };
 }
 
+async function preparePayPalCheckout(f) {
+  f.run(`
+    resetCheckoutResult();
+    product.paypalAvailable = true;
+    product.paypalClientId = 'public-client-id';
+    product.paypalEnvironment = 'live';
+    window.paypal = {
+      createInstance: async (options) => {
+        window.__paypalInstanceOptions = options;
+        return {
+          findEligibleMethods: async (options) => {
+            window.__paypalEligibilityOptions = options;
+            return { isEligible: method => method === 'paypal' };
+          },
+          createPayPalOneTimePaymentSession: async handlers => {
+            window.__paypalHandlers = handlers;
+            return {
+              start: async (options, orderPromise) => {
+                window.__paypalStartOptions = options;
+                window.__paypalOrderPromise = orderPromise;
+                window.__paypalOrderResult = await orderPromise;
+              }
+            };
+          }
+        };
+      }
+    };
+  `);
+  await f.run('ensurePayPalCheckout()');
+  f.run("setPaymentMethod('paypal')");
+}
+
+function paypalOrderResponse(purchaseId = 'paypal-approved', orderId = 'ORDER-APPROVED') {
+  return {
+    ok: true,
+    json: async () => ({ purchaseId, orderId, amount: '9.99', currency: 'USD' })
+  };
+}
+
+function assertNoLicense(f) {
+  assert.equal(f.element('#license-key').textContent, '');
+  assert.equal(f.element('[data-license-result]').hidden, true);
+}
+
 test('a current checkout renders its Pix and starts polling', async () => {
   const f = fixture();
   const submitted = f.submit();
@@ -351,37 +395,9 @@ test('PayPal order creation uses the selected plan and public coupon', async () 
   );
 });
 
-test('PayPal approval captures on the server and reveals the license', async () => {
+test('PayPal starts during the click with a pending order and captures only after approval', async () => {
   const f = fixture();
-
-  f.run(`
-    product.paypalAvailable = true;
-    product.paypalClientId = 'public-client-id';
-    product.paypalEnvironment = 'live';
-    window.paypal = {
-      createInstance: async (options) => {
-        window.__paypalInstanceOptions = options;
-        return {
-          findEligibleMethods: async (options) => {
-            window.__paypalEligibilityOptions = options;
-            return { isEligible: method => method === 'paypal' };
-          },
-          createPayPalOneTimePaymentSession: async handlers => {
-            window.__paypalHandlers = handlers;
-            return {
-              start: async (options, orderPromise) => {
-                window.__paypalStartOptions = options;
-                window.__paypalOrderId = (await orderPromise).orderId;
-              }
-            };
-          }
-        };
-      }
-    };
-  `);
-
-  await f.run('ensurePayPalCheckout()');
-  f.run("setPaymentMethod('paypal')");
+  await preparePayPalCheckout(f);
 
   assert.equal(
     f.run('window.__paypalInstanceOptions.clientId'),
@@ -394,26 +410,24 @@ test('PayPal approval captures on the server and reveals the license', async () 
 
   const click = f.element('#paypal-button').emit('click');
   assert.equal(f.requests.length, 1);
+  // These assertions run before yielding: moving start after an awaited order
+  // would lose the click's browser activation and fail this regression check.
+  assert.equal(f.run('window.__paypalStartOptions.presentationMode'), 'auto');
+  assert.equal(f.run('typeof window.__paypalOrderPromise.then'), 'function');
+  assert.equal(f.run('window.__paypalOrderResult'), undefined);
+  assert.equal(f.run('activePurchase'), null);
+  assertNoLicense(f);
 
-  f.requests[0].resolve({
-    ok: true,
-    json: async () => ({
-      purchaseId: 'paypal-approved',
-      orderId: 'ORDER-APPROVED',
-      amount: '9.99',
-      currency: 'USD'
-    })
-  });
+  f.requests[0].resolve(paypalOrderResponse());
   await click;
 
-  assert.equal(
-    f.run('window.__paypalOrderId'),
-    'ORDER-APPROVED'
+  assert.deepEqual(
+    JSON.parse(f.run('JSON.stringify(window.__paypalOrderResult)')),
+    { orderId: 'ORDER-APPROVED' }
   );
-  assert.equal(
-    f.run('window.__paypalStartOptions.presentationMode'),
-    'auto'
-  );
+  assert.equal(f.requests.length, 1, 'Creating an order must not capture it');
+  assert.equal(f.timers.size, 0, 'No license polling before approval');
+  assertNoLicense(f);
 
   const approval = f.run(
     "window.__paypalHandlers.onApprove({ orderId: 'ORDER-APPROVED' })"
@@ -428,6 +442,7 @@ test('PayPal approval captures on the server and reveals the license', async () 
     JSON.parse(f.requests[1].options.body),
     { orderId: 'ORDER-APPROVED' }
   );
+  assertNoLicense(f);
 
   f.requests[1].resolve({
     ok: true,
@@ -446,6 +461,66 @@ test('PayPal approval captures on the server and reveals the license', async () 
     f.element('[data-license-result]').hidden,
     false
   );
+});
+
+test('PayPal ignores approval for another order or a closed checkout', async () => {
+  const f = fixture();
+  await preparePayPalCheckout(f);
+  const click = f.element('#paypal-button').emit('click');
+  f.requests[0].resolve(paypalOrderResponse());
+  await click;
+
+  await f.run("window.__paypalHandlers.onApprove({ orderId: 'ANOTHER-ORDER' })");
+  assert.equal(f.requests.length, 1, 'A mismatched approval must not capture');
+  assertNoLicense(f);
+
+  f.run('closeCheckout()');
+  await f.run("window.__paypalHandlers.onApprove({ orderId: 'ORDER-APPROVED' })");
+  assert.equal(f.requests.length, 1, 'A closed checkout must not capture');
+  assert.equal(f.timers.size, 0);
+  assertNoLicense(f);
+});
+
+for (const failure of ['network rejection', 'server rejection', 'invalid order response']) {
+  test(`PayPal ${failure} cannot capture or reveal a license`, async () => {
+    const f = fixture();
+    await preparePayPalCheckout(f);
+    const click = f.element('#paypal-button').emit('click');
+
+    if (failure === 'network rejection') {
+      f.requests[0].reject(new Error('Synthetic order creation failure'));
+    } else if (failure === 'server rejection') {
+      f.requests[0].resolve({
+        ok: false,
+        json: async () => ({ error: 'Synthetic order creation failure' })
+      });
+    } else {
+      f.requests[0].resolve(paypalOrderResponse('unapproved-purchase', null));
+    }
+    await click;
+
+    await f.run("window.__paypalHandlers.onApprove({ orderId: 'ORDER-APPROVED' })");
+    assert.equal(f.requests.length, 1, 'Failed order creation must not capture');
+    assert.equal(f.run('activePurchase'), null);
+    assert.equal(f.run('activePayPalOrder'), null);
+    assert.equal(f.element('#checkout-error').hidden, false);
+    assert.equal(f.timers.size, 0);
+    assertNoLicense(f);
+  });
+}
+
+test('PayPal SDK error cannot capture or reveal a license before buyer approval', async () => {
+  const f = fixture();
+  await preparePayPalCheckout(f);
+  const click = f.element('#paypal-button').emit('click');
+  f.requests[0].resolve(paypalOrderResponse());
+  await click;
+
+  f.run("window.__paypalHandlers.onError(new Error('Synthetic PayPal failure'))");
+  assert.equal(f.requests.length, 1, 'SDK error must not capture the order');
+  assert.equal(f.element('#checkout-error').hidden, false);
+  assert.equal(f.timers.size, 0);
+  assertNoLicense(f);
 });
 
 test('PayPal cancellation releases the pending purchase and keeps Pix usable', async () => {
