@@ -1132,19 +1132,36 @@ async function refreshProduct() {
     if (
       typeof plansData.currency !== 'string' ||
       !/^[A-Z]{3}$/.test(plansData.currency) ||
-      typeof plansData.paypalCurrency !== 'string' ||
-      !/^[A-Z]{3}$/.test(plansData.paypalCurrency) ||
       !Array.isArray(plansData.plans)
     ) throw new Error('Invalid plans');
 
+    // Backward-compatible preview while the PayPal backend branch is not
+    // deployed yet. Once priceUSD is returned by the License Server, that
+    // server value always wins and remains controlled by LUM4 Admin.
+    const fallbackUsdByDevices = new Map(
+      product.plans.map(plan => [plan.devices, plan.priceUSD])
+    );
+    const paypalCurrency =
+      typeof plansData.paypalCurrency === 'string' &&
+      /^[A-Z]{3}$/.test(plansData.paypalCurrency)
+        ? plansData.paypalCurrency
+        : 'USD';
+
     const plans = plansData.plans
-      .map(plan => ({
-        id: plan?.id,
-        devices: plan?.maxDevices,
-        price: Number(plan?.priceBRL),
-        priceUSD: Number(plan?.priceUSD),
-        checkoutAvailable: true
-      }))
+      .map(plan => {
+        const devices = plan?.maxDevices;
+        const apiUsd = Number(plan?.priceUSD);
+        return {
+          id: plan?.id,
+          devices,
+          price: Number(plan?.priceBRL),
+          priceUSD:
+            Number.isFinite(apiUsd) && apiUsd > 0
+              ? apiUsd
+              : fallbackUsdByDevices.get(devices),
+          checkoutAvailable: true
+        };
+      })
       .filter(plan =>
         typeof plan.id === 'string' &&
         Number.isInteger(plan.devices) &&
@@ -1195,7 +1212,7 @@ async function refreshProduct() {
       downloadAvailable: directDownloadAvailable,
       price: plans[0].price,
       currency: plansData.currency,
-      paypalCurrency: plansData.paypalCurrency,
+      paypalCurrency,
       checkoutAvailable: true,
       paypalAvailable,
       paypalClientId: paypalAvailable ? paypalData.clientId.trim() : null,
