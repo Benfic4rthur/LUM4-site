@@ -1,0 +1,30 @@
+name: PayPal site branch checks
+
+on:
+  push:
+    branches:
+      - feature/paypal-checkout
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out website
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          package-manager-cache: false
+      - name: Check website scripts
+        run: npm run check
+      - name: Check security and checkout regressions
+        run: npm run test:security
+      - name: Build static website
+        run: npm run build:pages
