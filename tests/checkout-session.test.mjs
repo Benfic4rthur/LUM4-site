@@ -342,7 +342,7 @@ test('PayPal order creation uses the selected plan and public coupon', async () 
     })
   });
 
-  assert.equal(await creation, 'PAYPAL-ORDER');
+  assert.equal((await creation).orderId, 'PAYPAL-ORDER');
   assert.equal(f.run('activePurchase'), 'paypal-purchase');
   assert.equal(f.run('activePayPalOrder'), 'PAYPAL-ORDER');
   assert.equal(
@@ -371,7 +371,7 @@ test('PayPal approval captures on the server and reveals the license', async () 
             return {
               start: async (options, orderPromise) => {
                 window.__paypalStartOptions = options;
-                window.__paypalOrderId = await orderPromise;
+                window.__paypalOrderId = (await orderPromise).orderId;
               }
             };
           }
