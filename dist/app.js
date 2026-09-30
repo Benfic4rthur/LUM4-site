@@ -31,7 +31,7 @@ const licenseCopyStatus = document.querySelector('#license-copy-status');
 const salesCounter = document.querySelector('[data-sales-counter]');
 const salesNumber = document.querySelector('[data-sales-number]');
 const salesLabel = document.querySelector('[data-sales-label]');
-const demoSalesBoost = 125;
+const demoSalesBoost = 15;
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
 // The public download link works independently of product and checkout requests.
 const directDownloadAvailable = Boolean(document.querySelector('[data-download][href^="https://"]'));
