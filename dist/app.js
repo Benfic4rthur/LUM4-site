@@ -853,7 +853,7 @@ async function createPayPalOrderForCheckout() {
     pixCouponSummary.textContent = '';
   }
 
-  return data.orderId;
+  return { orderId: data.orderId };
 }
 
 paypalButton.addEventListener('click', async () => {
