@@ -36,9 +36,11 @@ O download é público e não exige login no GitHub. A compra atual consulta os 
 
 Ao iniciar um download, o site expande as instruções de primeira abertura logo abaixo do botão, sem interromper o link direto. O usuário também pode abrir o aviso antes de baixar. Sem JavaScript, as instruções ficam expandidas. O texto informa que a versão atual ainda não foi autenticada pela Apple e orienta a autorização em Privacidade e Segurança, com referência ao suporte da Apple. A alternativa no Terminal mostra o comando fornecido pelo responsável pelo app, restrito a `/Applications/LUM4.app`, com opção de copiar; o site não executa o comando. O aviso e as instruções estão disponíveis em português, inglês e espanhol.
 
-O contador do site público será obtido dos downloads do repositório de releases do LUM4. Essa integração fica para depois, conforme solicitado. Até lá, `product.json` usa `downloads: null`, e a versão publicada não apresenta um total de downloads nem faz consultas à API de releases.
+O contador consulta, no navegador, a API pública do GitHub para `Benfic4rthur/LUM4-Releases`. Ele percorre as páginas de 100 releases e soma o `download_count` dos assets `.dmg` de todos os releases públicos, incluindo pré-lançamentos; arquivos `.sha256` ficam excluídos. O total representa downloads, não usuários únicos. A origem dos dados é documentada nos [endpoints de releases da API do GitHub](https://docs.github.com/en/rest/releases/releases).
 
-A prévia local mantém o mecanismo anterior em `data/downloads.json`, que registra downloads iniciados pela rota local quando há um instalador configurado. Esse arquivo não é enviado ao GitHub Pages e não é a origem do futuro contador público.
+A consulta é independente da API de compra. O navegador guarda o último total válido no `localStorage`, com cache de cinco minutos, e atualiza a cada cinco minutos enquanto a aba está visível. Se uma consulta falhar, preserva o último total válido ou disponível em cache, sem substituir o resultado por um zero inventado. A API tem [limites para consultas sem autenticação](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api), e o número exibido pode ficar atrasado por cache ou erro de consulta.
+
+A prévia local ainda mantém a rota de download e o arquivo legado `data/downloads.json`, que registra downloads iniciados por essa rota quando há um instalador configurado. Esse arquivo não é enviado ao GitHub Pages e não alimenta o contador da interface.
 
 ## Conteúdo e desempenho
 

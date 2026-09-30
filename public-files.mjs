@@ -1,7 +1,7 @@
 import { lstat, readdir, realpath } from 'node:fs/promises';
 import { extname, resolve, sep } from 'node:path';
 
-const rootFiles = new Set(['index.html', 'app.js', 'locales.js', 'styles.css', 'favicon.ico']);
+const rootFiles = new Set(['index.html', 'app.js', 'locales.js', 'release-downloads.js', 'styles.css', 'favicon.ico']);
 const imageExtensions = new Set(['.png', '.webp', '.svg', '.ico', '.jpg', '.jpeg', '.gif', '.avif']);
 const safeName = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
 const backupName = /(?:^|[._-])(?:bak|backup|old|orig|save|tmp|temp)(?:[._-]|$)/i;

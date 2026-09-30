@@ -37,6 +37,9 @@ nav,.nav-buy,.button,.boost-label,.boost-value>span,.qualities>div,.mode-tabs bu
 .boost-range{height:28px;margin:2px 0;background-size:100% 5px;background-repeat:no-repeat;background-position:center}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}.button:hover{transform:none}}
 
+.download-summary [data-download-total]{white-space:nowrap}
+.download-summary [hidden]{display:none}
+
 /* Product context and optional on-device learning. */
 .download-help{margin-top:17px;border:1px solid #ffb66c2b;border-radius:12px;background:#ffb66c04;max-width:540px;min-width:0}
 .download-help summary{display:flex;align-items:center;gap:9px;min-height:46px;padding:11px 14px;list-style:none;cursor:pointer;color:#ebc69f;font-size:.8125rem;font-weight:550}

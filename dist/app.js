@@ -33,16 +33,13 @@ const salesNumber = document.querySelector('[data-sales-number]');
 const salesLabel = document.querySelector('[data-sales-label]');
 const demoSalesBoost = 125;
 const licenseApiBase = 'https://lum-4-license-server.vercel.app';
-const staticHosting = document.documentElement.dataset.hosting === 'static';
 // The public download link works independently of product and checkout requests.
 const directDownloadAvailable = Boolean(document.querySelector('[data-download][href^="https://"]'));
-let product = { downloadAvailable: directDownloadAvailable, checkoutAvailable: false, downloads: staticHosting ? null : 0, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
+let product = { downloadAvailable: directDownloadAvailable, checkoutAvailable: false, price: 14.99, currency: 'BRL', plans: [{ id: 'mac_1', devices: 1, price: 14.99, checkoutAvailable: false }, { id: 'mac_2', devices: 2, price: 23.99, checkoutAvailable: false }, { id: 'mac_3', devices: 3, price: 29.99, checkoutAvailable: false }] };
 let publishedCoupon = null;
 let salesCount = 0;
 let activePurchase = null;
 let selectedDevices = 1;
-let productLoaded = false;
-let productUnavailable = false;
 let availabilityType = 'download';
 const locales = window.LUM4_LOCALES;
 function validLanguage(value) { return typeof value === 'string' && Object.hasOwn(locales, value); }
@@ -60,6 +57,67 @@ function copy() { return locales[language]; }
 function message(key, values = {}) {
   return copy().dynamic[key].replace(/\{(\w+)\}/g, (placeholder, name) => values[name] ?? placeholder);
 }
+
+// GitHub download totals have their own state; checkout availability never changes them.
+const downloadCacheKey = 'lum4-release-downloads-v1';
+const downloadCacheTtl = 5 * 60 * 1000;
+let downloadsTotal = null;
+let downloadsFetchedAt = 0;
+let downloadsLastAttempt = 0;
+let downloadsRequest = null;
+
+function readDownloadCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(downloadCacheKey));
+    if (cached && Number.isSafeInteger(cached.total) && cached.total >= 0 &&
+      Number.isSafeInteger(cached.fetchedAt) && cached.fetchedAt > 0 && cached.fetchedAt <= Date.now()) {
+      return cached;
+    }
+  } catch { /* The public counter also works when browser storage is blocked. */ }
+  return null;
+}
+
+function renderDownloadSummary() {
+  const known = Number.isSafeInteger(downloadsTotal) && downloadsTotal >= 0;
+  document.querySelector('[data-download-total]').hidden = !known;
+  document.querySelector('[data-download-divider]').hidden = !known;
+  document.querySelector('[data-download-count]').textContent = known ? new Intl.NumberFormat(copy().locale).format(downloadsTotal) : '—';
+  document.querySelector('[data-download-unit]').textContent = message(downloadsTotal === 1 ? 'downloadOne' : 'downloadOther');
+  document.querySelector('[data-release-status]').textContent = message(known ? 'downloadTotal' : 'downloadReady');
+}
+
+async function fetchGitHubDownloads() {
+  const { fetchReleaseDownloadTotal } = await import('./release-downloads.js?v=downloads1');
+  return fetchReleaseDownloadTotal({ signal: AbortSignal.timeout(10000) });
+}
+
+function refreshDownloadCount(fetchTotal = fetchGitHubDownloads) {
+  if (downloadsRequest) return downloadsRequest;
+  const now = Date.now();
+  const cached = readDownloadCache();
+  if (cached && cached.fetchedAt >= downloadsFetchedAt) {
+    downloadsTotal = cached.total;
+    downloadsFetchedAt = cached.fetchedAt;
+    renderDownloadSummary();
+    if (now - cached.fetchedAt < downloadCacheTtl) return Promise.resolve();
+  }
+  if (downloadsLastAttempt > 0 && now >= downloadsLastAttempt && now - downloadsLastAttempt < downloadCacheTtl) return Promise.resolve();
+  downloadsLastAttempt = now;
+  downloadsRequest = (async () => {
+    try {
+      const total = await fetchTotal();
+      if (!Number.isSafeInteger(total) || total < 0) throw new Error('Invalid download total');
+      downloadsTotal = total;
+      downloadsFetchedAt = Date.now();
+      try {
+        localStorage.setItem(downloadCacheKey, JSON.stringify({ total, fetchedAt: downloadsFetchedAt }));
+      } catch { /* Saving this public count is optional. */ }
+      renderDownloadSummary();
+    } catch { /* Retain the last verified total rather than inventing a zero or partial count. */ }
+  })().finally(() => { downloadsRequest = null; });
+  return downloadsRequest;
+}
+
 function translateStatic() {
   document.documentElement.lang = copy().locale;
   const bindings = [
@@ -721,9 +779,7 @@ function renderProduct() {
   badge.textContent = `−${new Intl.NumberFormat(copy().locale, { style: 'percent', maximumFractionDigits: 0 }).format(separatePrice ? savings / separatePrice : 0)}`;
   document.querySelector('[data-plan-savings-copy]').textContent = savings > 0 ? message('tripleSavings', { savings: formattedPrice(savings / 100) }) : copy().strings['purchase.caption'];
   document.querySelector('[data-plan-savings-basis]').hidden = savings === 0;
-  document.querySelector('[data-download-count]').textContent = productUnavailable || product.downloads === null ? '—' : new Intl.NumberFormat(copy().locale).format(product.downloads);
-  document.querySelector('[data-download-unit]').textContent = message(productLoaded && product.downloads === 1 ? 'downloadOne' : 'downloadOther');
-  document.querySelector('[data-release-status]').textContent = message(product.downloadAvailable ? 'downloadReady' : productUnavailable ? 'downloadUnavailable' : 'downloadSoon');
+  renderDownloadSummary();
   document.querySelector('[data-sale-status]').textContent = message(plan.checkoutAvailable ? 'saleReady' : 'saleSoon');
   document.querySelector('[data-checkout-note]').textContent = message(plan.checkoutAvailable ? 'checkoutReady' : 'checkoutSoon', { devices: selectedDevices, deviceLabel: message(selectedDevices === 1 ? 'deviceOne' : 'deviceOther') });
   if (Number.isSafeInteger(salesCount) && salesCount >= 0) {
@@ -753,29 +809,6 @@ function validPublicCoupon(value) {
 }
 
 async function refreshProduct() {
-  let downloadData = null;
-
-  try {
-    const response = await fetch(staticHosting ? '/product.json?v=checkout2' : '/api/product', {
-      signal: AbortSignal.timeout(5000),
-      cache: 'no-store'
-    });
-    if (response.ok) {
-      const data = await response.json();
-      const validCount =
-        (Number.isSafeInteger(data.downloads) && data.downloads >= 0) ||
-        (staticHosting && data.downloads === null);
-      if (
-        typeof data.downloadAvailable === 'boolean' &&
-        validCount
-      ) {
-        downloadData = data;
-      }
-    }
-  } catch {
-    downloadData = null;
-  }
-
   try {
     const [plansResponse, couponsResponse, statsResponse] = await Promise.all([
       fetch(`${licenseApiBase}/v1/plans`, {
@@ -851,21 +884,16 @@ async function refreshProduct() {
 
     product = {
       downloadAvailable: directDownloadAvailable,
-      downloads: downloadData?.downloads ?? (staticHosting ? null : 0),
       price: plans[0].price,
       currency: plansData.currency,
       checkoutAvailable: true,
       plans
     };
     publishedCoupon = nextCoupon;
-    productLoaded = true;
-    productUnavailable = false;
   } catch {
-    productUnavailable = true;
     product = {
       ...product,
       downloadAvailable: directDownloadAvailable,
-      downloads: downloadData?.downloads ?? (staticHosting ? null : 0),
       checkoutAvailable: false,
       plans: product.plans.map(plan => ({ ...plan, checkoutAvailable: false }))
     };
@@ -898,10 +926,12 @@ document.querySelectorAll('[data-language]').forEach(button => button.addEventLi
 updateSceneCopy();
 selectMode(tabs[0]);
 renderProduct();
+refreshDownloadCount();
 refreshProduct();
 window.addEventListener('focus', refreshProduct);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshProduct(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { refreshProduct(); refreshDownloadCount(); } });
 setInterval(() => { if (!document.hidden) refreshProduct(); }, 180000);
+setInterval(() => { if (!document.hidden) refreshDownloadCount(); }, downloadCacheTtl);
 
 // Entrances replay on a fresh page load, once per element while scrolling.
 if (!motionPreference.matches) {

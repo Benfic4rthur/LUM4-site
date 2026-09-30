@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0c0d0f" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self'; style-src-attr 'none'; script-src 'self'; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; img-src 'self' data:; style-src 'self'; style-src-attr 'none'; script-src 'self'; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app https://api.github.com" />
     <meta name="referrer" content="no-referrer" />
     <meta name="description" data-i18n-content="meta.description" content="LUM4 by ALLM4. Boost XDR nativo para macOS, com controle simples e IA local que aprende suas preferências. Para Macs Apple Silicon com tela XDR integrada." />
     <meta property="og:title" data-i18n-content="meta.title" content="LUM4 — Mais luz para o que importa." />
@@ -34,9 +34,9 @@
     <link rel="icon" type="image/png" sizes="256x256" href="/assets/lum4-favicon-256-v4.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v4.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=support2" />
-    <script src="/locales.js?v=support2" defer></script>
-    <script src="/app.js?v=security-audit1" defer></script>
+    <link rel="stylesheet" href="/styles.css?v=downloads1" />
+    <script src="/locales.js?v=downloads1" defer></script>
+    <script src="/app.js?v=downloads1" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
@@ -106,9 +106,9 @@
           <p class="requirements" data-i18n="hero.requirements">macOS 26+ · Apple Silicon · Tela XDR integrada</p>
           <div class="download-summary" aria-live="polite">
             <svg class="icon" aria-hidden="true"><use href="#i-download" /></svg>
-            <span><strong data-download-count>0</strong> <span data-download-unit>downloads</span></span>
-            <span class="summary-divider" aria-hidden="true"></span>
-            <span class="release-status" data-release-status>Feito para macOS</span>
+            <span data-download-total hidden><strong data-download-count>—</strong> <span data-download-unit>downloads</span></span>
+            <span class="summary-divider" data-download-divider aria-hidden="true" hidden></span>
+            <span class="release-status" data-release-status>Download disponível</span>
           </div>
         </div>
 
