@@ -54,7 +54,7 @@ const server = createServer(async (req, res) => {
   res.setHeader('Referrer-Policy', 'no-referrer');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  res.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://*.paypal.com; form-action 'none'; img-src 'self' data: https://*.paypal.com https://*.paypalobjects.com; style-src 'self' https://*.paypal.com; style-src-attr 'none'; script-src 'self' https://*.paypal.com; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app https://api.github.com https://*.paypal.com; frame-ancestors 'none'");
+  res.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'none'; object-src 'none'; frame-src https://*.paypal.com https://*.paypalobjects.com; form-action 'none'; img-src 'self' data: https://*.paypal.com https://*.paypalobjects.com; font-src 'self' https://*.paypalobjects.com; style-src 'self' https://*.paypal.com https://*.paypalobjects.com; style-src-attr 'none'; script-src 'self' https://*.paypal.com https://*.paypalobjects.com; script-src-attr 'none'; connect-src 'self' https://lum-4-license-server.vercel.app https://api.github.com https://*.paypal.com https://*.paypalobjects.com; frame-ancestors 'none'");
   try {
     if (!['GET', 'HEAD'].includes(req.method)) { res.setHeader('Allow', 'GET, HEAD'); return json(res, 405, { error: 'Método indisponível.' }); }
     const { pathname, searchParams } = new URL(req.url, 'http://localhost');
