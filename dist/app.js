@@ -772,7 +772,8 @@ async function ensurePayPalCheckout() {
           checkoutError.hidden = false;
         }
       },
-      onCancel() {
+      onCancel(data) {
+        globalThis.console?.warn?.('PayPal payment cancelled:', data);
         if (!checkoutDialog.open) return;
         const purchaseId = activePurchase;
         const orderId = activePayPalOrder;
