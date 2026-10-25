@@ -34,9 +34,10 @@
     <link rel="icon" type="image/png" sizes="256x256" href="/assets/lum4-favicon-256-v4.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/lum4-touch-icon-v4.png" />
     <link rel="preload" as="image" href="/assets/ocean-sunrise.webp" />
-    <link rel="stylesheet" href="/styles.css?v=paypal1" />
+    <link rel="stylesheet" href="/styles.css?v=release-version1" />
     <script src="/locales.js?v=paypal1" defer></script>
     <script src="/app.js?v=paypal1" defer></script>
+    <script type="module" src="/release-version.js?v=1"></script>
   </head>
   <body>
     <a class="skip-link" href="#conteudo" data-i18n="navigation.skip">Ir para o conteúdo</a>
@@ -54,10 +55,10 @@
     </svg>
 
     <header class="site-header wrap">
-      <a class="brand" href="#" aria-label="LUM4, início" data-i18n-aria-label="navigation.home">
+      <div class="brand-group"><a class="brand" href="#" aria-label="LUM4, início" data-i18n-aria-label="navigation.home">
         <img src="/assets/lum4-mark.png" width="38" height="38" alt="" />
         <span class="brand-name">LUM4<span class="brand-by">by ALLM4</span></span>
-      </a>
+      </a><span class="brand-version" data-release-version aria-live="polite" hidden></span></div>
       <nav aria-label="Navegação principal" data-i18n-aria-label="navigation.main">
         <a class="nav-link" href="#como-funciona" data-i18n="navigation.how">Como funciona</a>
         <a class="nav-buy" href="#comprar"><span data-i18n="actions.buy">Comprar</span> <svg class="icon" aria-hidden="true"><use href="#i-arrow" /></svg></a>

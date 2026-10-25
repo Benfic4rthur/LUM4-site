@@ -16,6 +16,8 @@ Na Hostinger, o domínio aponta para os endereços de GitHub Pages; `www` usa CN
 
 O download navega diretamente para o GitHub Releases pelo link permanente no HTML, tanto na prévia quanto no site publicado. Funciona sem JavaScript e independentemente das consultas de produto e compra. `product.json` publica a mesma URL; a prévia local continua usando `server.mjs` para os demais dados e rotas `/api/*`. GitHub Pages serve a versão estática sem precisar executar esse servidor.
 
+O cabeçalho também mostra a versão ao lado de LUM4. `dist/release-version.js` consulta a última release estável pública de `LUM4-Releases`, valida o DMG oficial e atualiza o número e o destino do download juntos. A consulta ocorre ao abrir, ao voltar à aba e a cada cinco minutos enquanto a página estiver visível, sem número fixo ou credenciais. Em caso de falha ou release incompleta, o número fica oculto e o link permanente `latest/download` continua disponível. O rótulo acessível acompanha o idioma da página.
+
 ## Download e compra
 
 Edite `site.config.json`:

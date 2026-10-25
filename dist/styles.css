@@ -426,3 +426,7 @@ paypal-button{display:block;width:100%;min-height:48px}
 @media(max-width:640px){
   .footer-meta{justify-content:flex-start;font-size:.65625rem}
 }
+
+/* The version is shared with the release selected for the public download. */
+.brand-group{display:flex;align-items:center;gap:12px;min-width:0}.brand-version{align-self:flex-start;display:inline-flex;align-items:center;min-height:22px;margin-top:1px;padding:3px 7px;border:1px solid #ffbd7440;border-radius:4px;color:#d6b58e;font:10px/1.25 ui-monospace,SFMono-Regular,Consolas,monospace;letter-spacing:0;white-space:nowrap}.brand-version[hidden]{display:none}
+@media(max-width:420px){.brand-group{gap:8px}.brand-version{font-size:9px;padding-inline:5px}}
